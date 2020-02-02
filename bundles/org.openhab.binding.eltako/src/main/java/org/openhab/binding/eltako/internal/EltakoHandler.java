@@ -12,6 +12,9 @@
  */
 package org.openhab.binding.eltako.internal;
 
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -22,6 +25,7 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,33 +39,61 @@ import org.slf4j.LoggerFactory;
 public class EltakoHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(EltakoHandler.class);
-
     private @Nullable EltakoConfiguration config;
-
+    private @Nullable ScheduledFuture<?> pollingJob;
     public EltakoHandler(Thing thing) {
         super(thing);
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_1.equals(channelUID.getId())) {
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
-            }
+    public void handleCommand(ChannelUID channelUID, Command command)
+    {
+        switch (channelUID.getId())
+        {
+            case CHANNEL_1:
+                if (command instanceof RefreshType)
+                {
+                    // TODO: handle data refresh
+                }
 
-            // TODO: handle command
 
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
+                // TODO: handle command
+
+                // Note: if communication with thing fails for some reason,
+                // indicate that by setting the status with detail information:
+                // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                // "Could not control device at IP address x.x.x.x");
+
+                if(command instanceof OnOffType)
+                {
+                    logger.info("Got OnOffType!");
+                    //State state = (OnOffType) command;
+                    if (command.equals(OnOffType.ON))
+                        updateState(CHANNEL_1, OnOffType.OFF);
+                    if (command.equals(OnOffType.OFF))
+                        updateState(CHANNEL_1, OnOffType.OFF);
+                }
+                break;
+                // ...
         }
+
+        logger.info("Command received: {}, {}", channelUID, command);
+        logger.info("For channel: {}", channelUID.getId());
     }
 
     @Override
     public void initialize() {
-        // logger.debug("Start initializing!");
+        logger.info("Start initializing!");
         config = getConfigAs(EltakoConfiguration.class);
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                // execute some binding specific polling code
+                logger.info("Some scheduled stuff!");
+            }
+        };
+        pollingJob = scheduler.scheduleWithFixedDelay(runnable, 0, 1, TimeUnit.SECONDS);
 
         // TODO: Initialize the handler.
         // The framework requires you to return from this method quickly. Also, before leaving this method a thing
@@ -87,12 +119,20 @@ public class EltakoHandler extends BaseThingHandler {
             }
         });
 
-        // logger.debug("Finished initializing!");
+        logger.info("Finished initializing!");
 
         // Note: When initialization can NOT be done set the status with more details for further
         // analysis. See also class ThingStatusDetail for all available status details.
         // Add a description to give user information to understand why thing does not work as expected. E.g.
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
         // "Can not access device as username and/or password are invalid");
+    }
+
+    @Override
+    public void dispose() {
+        logger.info("Dispose instance!");
+
+        if(this.pollingJob != null)
+            pollingJob.cancel(true);
     }
 }

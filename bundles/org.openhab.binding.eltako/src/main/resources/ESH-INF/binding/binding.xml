@@ -4,7 +4,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/binding/v1.0.0 https://openhab.org/schemas/binding-1.0.0.xsd">
 
 	<name>Eltako Binding</name>
-	<description>This is the binding for Eltako.</description>
+	<description>The Eltako binding integrates the Eltako FAM14 device family. It allows control over a number of sensors/actors.</description>
 	<author>Martin Wenske</author>
 
 </binding:binding>

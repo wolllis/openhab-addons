@@ -4,21 +4,26 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<label>Eltako Binding Thing</label>
-		<description>Sample thing for Eltako Binding</description>
+	<!-- Eltako Thing Types -->
+	<thing-type id="FUD14">
+		<label>FUD14</label>
+		<description>Universal Dimming Actor, Power MOSFET up to 400W</description>
 
 		<channels>
-			<channel id="channel1" typeId="sample-channel" />
+			<!-- Channels represent the state of the Thing which can be linked to an Item -->
+			<channel id="power" typeId="system.power" />
+			<channel id="brightness" typeId="system.brightness" />
 		</channels>
 
-		<config-description>
-			<parameter name="config1" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
-			</parameter>
-		</config-description>
+		<properties>
+			<!-- Properties are shown to the user but can NOT be modified by him -->
+			<property name="vendor">MyVendor</property>
+			<property name="modelId">MyId</property>
+			<property name="protocol">MyProtokol</property>
+		</properties>
+
+		<!-- Represenation-Properties are NOT shown to the user -->
+		<representation-property>EltakoBusID</representation-property>
 
 	</thing-type>
 

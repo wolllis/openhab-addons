@@ -93,6 +93,8 @@ public class EltakoHandler extends BaseThingHandler {
                 logger.info("Some scheduled stuff!");
             }
         };
+
+        logger.info("Creating scheduler");
         pollingJob = scheduler.scheduleWithFixedDelay(runnable, 0, 1, TimeUnit.SECONDS);
 
         // TODO: Initialize the handler.

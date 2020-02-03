@@ -50,7 +50,7 @@ public class EltakoHandler extends BaseThingHandler {
     {
         switch (channelUID.getId())
         {
-            case CHANNEL_1:
+            case CHANNEL_POWER:
                 if (command instanceof RefreshType)
                 {
                     // TODO: handle data refresh
@@ -69,12 +69,15 @@ public class EltakoHandler extends BaseThingHandler {
                     logger.info("Got OnOffType!");
                     //State state = (OnOffType) command;
                     if (command.equals(OnOffType.ON))
-                        updateState(CHANNEL_1, OnOffType.OFF);
+                        updateState(CHANNEL_POWER, OnOffType.OFF);
                     if (command.equals(OnOffType.OFF))
-                        updateState(CHANNEL_1, OnOffType.OFF);
+                        updateState(CHANNEL_POWER, OnOffType.OFF);
                 }
                 break;
                 // ...
+            case CHANNEL_BRIGHTNESS:
+                logger.info("CHANNEL_BRIGHTNESS received command!");
+                break;
         }
 
         logger.info("Command received: {}, {}", channelUID, command);
@@ -122,9 +125,9 @@ public class EltakoHandler extends BaseThingHandler {
         });
 
         // Update vendor property
-        updateProperty(Thing.PROPERTY_VENDOR, "Eltako");
-        updateProperty(Thing.PROPERTY_MODELID, "I dont know Oo");
-        updateProperty(Thing.PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
+        updateProperty(PROPERTY_VENDOR, "Eltako");
+        updateProperty(PROPERTY_ID, "I dont care");
+        updateProperty(PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
 
         logger.info("Finished initializing!");
 

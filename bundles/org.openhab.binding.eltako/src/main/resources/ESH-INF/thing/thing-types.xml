@@ -18,7 +18,7 @@
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
 			<property name="vendor">MyVendor</property>
-			<property name="modelId">MyId</property>
+			<property name="id">MyId</property>
 			<property name="protocol">MyProtokol</property>
 		</properties>
 

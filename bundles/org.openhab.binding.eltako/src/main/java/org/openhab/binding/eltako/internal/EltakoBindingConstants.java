@@ -30,6 +30,11 @@ public class EltakoBindingConstants {
     public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "FUD14");
 
     // List of all Channel ids
-    public static final String CHANNEL_1 = "power";
-    public static final String CHANNEL_2 = "brightness";
+    public static final String CHANNEL_POWER = "power";
+    public static final String CHANNEL_BRIGHTNESS = "brightness";
+
+    //List of all configuration parameters
+    public static final String PROPERTY_VENDOR = "vendor";
+    public static final String PROPERTY_ID = "id";
+    public static final String PROPERTY_PROTOCOL = "protocol";
 }

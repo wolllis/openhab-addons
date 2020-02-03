@@ -14,6 +14,11 @@ package org.openhab.binding.eltako.internal;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.Enumeration;
+import java.io.BufferedReader;
+import java.io.PrintStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
@@ -28,6 +33,10 @@ import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gnu.io.CommPortIdentifier;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
 
 /**
  * The {@link EltakoHandler} is responsible for handling commands, which are
@@ -44,6 +53,8 @@ public class EltakoHandler extends BaseThingHandler {
     public EltakoHandler(Thing thing) {
         super(thing);
     }
+
+    private @Nullable CommPortIdentifier portId;
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command)
@@ -67,11 +78,159 @@ public class EltakoHandler extends BaseThingHandler {
                 if(command instanceof OnOffType)
                 {
                     logger.info("Got OnOffType!");
-                    //State state = (OnOffType) command;
-                    if (command.equals(OnOffType.ON))
-                        updateState(CHANNEL_POWER, OnOffType.OFF);
-                    if (command.equals(OnOffType.OFF))
-                        updateState(CHANNEL_POWER, OnOffType.OFF);
+
+                    //############################################################
+                    logger.info("Setting properties");
+                    // Update vendor property
+                    updateProperty(PROPERTY_VENDOR, "Eltako");
+                    updateProperty(PROPERTY_ID, "I dont care");
+                    updateProperty(PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
+
+                    logger.info("Search for Serial Ports");
+
+                    // Platform specific port name, here= a Unix name
+                    //
+                    // NOTE: On at least one Unix JavaComm implementation JavaComm
+                    //       enumerates the ports as "COM1" ... "COMx", too, and not
+                    //       by their Unix device names "/dev/tty...".
+                    //       Yet another good reason to not hard-code the wanted
+                    //       port, but instead make it user configurable.
+                    //
+                    String wantedPortName = "COM8";
+                    //
+                    // Get an enumeration of all ports known to JavaComm
+                    //
+                    Enumeration portIdentifiers = CommPortIdentifier.getPortIdentifiers();
+                    //
+                    // Check each port identifier if
+                    //   (a) it indicates a serial (not a parallel) port, and
+                    //   (b) matches the desired name.
+                    //
+                    CommPortIdentifier portId = null;  // will be set if port found
+                    while (portIdentifiers.hasMoreElements())
+                    {
+                        CommPortIdentifier pid = (CommPortIdentifier) portIdentifiers.nextElement();
+                        if(pid.getPortType() == CommPortIdentifier.PORT_SERIAL &&
+                                pid.getName().equals(wantedPortName))
+                        {
+                            portId = pid;
+                            break;
+                        }
+                    }
+                    if(portId == null)
+                    {
+                        logger.info("Could not find serial port {}", wantedPortName);
+                    }
+
+                    SerialPort port = null;
+
+                    try {
+                        port = (SerialPort) portId.open(
+                                "name", // Name of the application asking for the port
+                                10000   // Wait max. 10 sec. to acquire port
+                        );
+                    } catch(PortInUseException e) {
+                        logger.info("Port already in use: {}", e);
+                    }
+                    // Set all the params.
+                    // This may need to go in a try/catch block which throws UnsupportedCommOperationException
+                    //
+                    try
+                    {
+                        port.setSerialPortParams(57600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.info("Something went wrong during setting com parameters: {}", e.toString());
+                    }
+
+
+                    //
+                    // Open the input Reader and output stream. The choice of a
+                    // Reader and Stream are arbitrary and need to be adapted to
+                    // the actual application. Typically one would use Streams in
+                    // both directions, since they allow for binary data transfer,
+                    // not only character data transfer.
+                    //
+                    BufferedReader is = null;  // for demo purposes only. A stream would be more typical.
+                    PrintStream    os = null;
+
+                    try {
+                        is = new BufferedReader(new InputStreamReader(port.getInputStream()));
+                    } catch (IOException e) {
+                        logger.info("Can't open input stream: write-only");
+                    }
+
+                    //
+                    // New Linux systems rely on Unicode, so it might be necessary to
+                    // specify the encoding scheme to be used. Typically this should
+                    // be US-ASCII (7 bit communication), or ISO Latin 1 (8 bit
+                    // communication), as there is likely no modem out there accepting
+                    // Unicode for its commands. An example to specify the encoding
+                    // would look like:
+                    //
+                    //     os = new PrintStream(port.getOutputStream(), true, "ISO-8859-1");
+                    //
+                    try
+                    {
+                        os = new PrintStream(port.getOutputStream(), true);
+                        //
+                        // Actual data communication would happen here
+
+                        //State state = (OnOffType) command;
+                        if (command.equals(OnOffType.ON)) {
+                            //updateState(CHANNEL_POWER, OnOffType.OFF);
+                            // Write to the output
+                            //os.print("State ON");
+                            //os.write( 0x53 );
+                            os.write( 0xA5 );
+                            os.write( 0x5A );
+                            os.write( 0x0B );
+                            os.write( 0x07 );
+                            os.write( 0x02 );
+                            os.write( 0x64 );
+                            os.write( 0x00 );
+                            os.write( 0x09 );
+                            os.write( 0x00 );
+                            os.write( 0x00 );
+                            os.write( 0x00 );
+                            os.write( 0x03 );
+                            os.write( 0x00 );
+                            os.write( 0x84 );
+                        }
+                        if (command.equals(OnOffType.OFF)) {
+                            //updateState(CHANNEL_POWER, OnOffType.OFF);
+                            // Write to the output
+                            //os.print("State OFF");
+                            os.write( 0xA5 );
+                            os.write( 0x5A );
+                            os.write( 0x0B );
+                            os.write( 0x07 );
+                            os.write( 0x02 );
+                            os.write( 0x64 );
+                            os.write( 0x00 );
+                            os.write( 0x08 );
+                            os.write( 0x00 );
+                            os.write( 0x00 );
+                            os.write( 0x00 );
+                            os.write( 0x03 );
+                            os.write( 0x00 );
+                            os.write( 0x83 );
+                        }
+                        //
+                        // It is very important to close input and output streams as well
+                        // as the port. Otherwise Java, driver and OS resources are not released.
+                        //
+                        if (is != null) is.close();
+                        if (os != null) os.close();
+                        if (port != null) port.close();
+                    }
+                    catch (IOException e)
+                    {
+                        logger.info("Something went wrong during setting com parameters: {}", e.toString());
+                    }
+                // ############################################################
+
                 }
                 break;
                 // ...
@@ -124,10 +283,6 @@ public class EltakoHandler extends BaseThingHandler {
             }
         });
 
-        // Update vendor property
-        updateProperty(PROPERTY_VENDOR, "Eltako");
-        updateProperty(PROPERTY_ID, "I dont care");
-        updateProperty(PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
 
         logger.info("Finished initializing!");
 

@@ -25,6 +25,18 @@
 		<!-- Represenation-Properties are NOT shown to the user -->
 		<representation-property>EltakoBusID</representation-property>
 
+		<!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
+		<config-description>
+			<parameter name="SerialComPort" type="integer" required="true">
+				<label>Serial Comport Number</label>
+				<description>Defines which serial interface should be used for communication</description>
+			</parameter>
+			<parameter name="DeviceID" type="text" required="true">
+				<label>Eltako Bus Device ID</label>
+				<description>Used to identify the device on the Eltako Bus</description>
+			</parameter>
+		</config-description>
+
 	</thing-type>
 
 	<!-- Sample Channel Type -->

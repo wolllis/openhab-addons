@@ -121,6 +121,11 @@ public class EltakoHandler extends BaseThingHandler {
             }
         });
 
+        // Update vendor property
+        updateProperty(Thing.PROPERTY_VENDOR, "Eltako");
+        updateProperty(Thing.PROPERTY_MODELID, "I dont know Oo");
+        updateProperty(Thing.PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
+
         logger.info("Finished initializing!");
 
         // Note: When initialization can NOT be done set the status with more details for further

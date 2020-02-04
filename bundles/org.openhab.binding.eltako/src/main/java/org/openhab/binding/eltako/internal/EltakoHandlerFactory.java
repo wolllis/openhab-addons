@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.eltako.internal;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+import static org.openhab.binding.eltako.internal.EltakoBindingConstants.THING_TYPE_FUD14;
 
 import java.util.Collections;
 import java.util.Set;
@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.eltako", service = ThingHandlerFactory.class)
 public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_SAMPLE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_FUD14);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -47,7 +47,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
+        if (THING_TYPE_FUD14.equals(thingTypeUID)) {
             return new EltakoHandler(thing);
         }
 

@@ -27,7 +27,7 @@ public class EltakoBindingConstants {
     private static final String BINDING_ID = "eltako";
 
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "FUD14");
+    public static final ThingTypeUID THING_TYPE_FUD14 = new ThingTypeUID(BINDING_ID, "FUD14");
 
     // List of all Channel ids
     public static final String CHANNEL_POWER = "power";

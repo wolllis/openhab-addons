@@ -12,25 +12,25 @@
  */
 package org.openhab.binding.eltako.internal;
 
+import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.util.Enumeration;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.Enumeration;
-import java.io.BufferedReader;
-import java.io.PrintStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +50,7 @@ public class EltakoHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(EltakoHandler.class);
     private @Nullable EltakoConfiguration config;
     private @Nullable ScheduledFuture<?> pollingJob;
+
     public EltakoHandler(Thing thing) {
         super(thing);
     }
@@ -57,16 +58,12 @@ public class EltakoHandler extends BaseThingHandler {
     private @Nullable CommPortIdentifier portId;
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command)
-    {
-        switch (channelUID.getId())
-        {
+    public void handleCommand(ChannelUID channelUID, Command command) {
+        switch (channelUID.getId()) {
             case CHANNEL_POWER:
-                if (command instanceof RefreshType)
-                {
+                if (command instanceof RefreshType) {
                     // TODO: handle data refresh
                 }
-
 
                 // TODO: handle command
 
@@ -75,11 +72,10 @@ public class EltakoHandler extends BaseThingHandler {
                 // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                 // "Could not control device at IP address x.x.x.x");
 
-                if(command instanceof OnOffType)
-                {
+                if (command instanceof OnOffType) {
                     logger.info("Got OnOffType!");
 
-                    //############################################################
+                    // ############################################################
                     logger.info("Setting properties");
                     // Update vendor property
                     updateProperty(PROPERTY_VENDOR, "Eltako");
@@ -91,10 +87,10 @@ public class EltakoHandler extends BaseThingHandler {
                     // Platform specific port name, here= a Unix name
                     //
                     // NOTE: On at least one Unix JavaComm implementation JavaComm
-                    //       enumerates the ports as "COM1" ... "COMx", too, and not
-                    //       by their Unix device names "/dev/tty...".
-                    //       Yet another good reason to not hard-code the wanted
-                    //       port, but instead make it user configurable.
+                    // enumerates the ports as "COM1" ... "COMx", too, and not
+                    // by their Unix device names "/dev/tty...".
+                    // Yet another good reason to not hard-code the wanted
+                    // port, but instead make it user configurable.
                     //
                     String wantedPortName = "COM8";
                     //
@@ -103,47 +99,40 @@ public class EltakoHandler extends BaseThingHandler {
                     Enumeration portIdentifiers = CommPortIdentifier.getPortIdentifiers();
                     //
                     // Check each port identifier if
-                    //   (a) it indicates a serial (not a parallel) port, and
-                    //   (b) matches the desired name.
+                    // (a) it indicates a serial (not a parallel) port, and
+                    // (b) matches the desired name.
                     //
-                    CommPortIdentifier portId = null;  // will be set if port found
-                    while (portIdentifiers.hasMoreElements())
-                    {
+                    CommPortIdentifier portId = null; // will be set if port found
+                    while (portIdentifiers.hasMoreElements()) {
                         CommPortIdentifier pid = (CommPortIdentifier) portIdentifiers.nextElement();
-                        if(pid.getPortType() == CommPortIdentifier.PORT_SERIAL &&
-                                pid.getName().equals(wantedPortName))
-                        {
+                        if (pid.getPortType() == CommPortIdentifier.PORT_SERIAL
+                                && pid.getName().equals(wantedPortName)) {
                             portId = pid;
                             break;
                         }
                     }
-                    if(portId == null)
-                    {
+                    if (portId == null) {
                         logger.info("Could not find serial port {}", wantedPortName);
                     }
 
                     SerialPort port = null;
 
                     try {
-                        port = (SerialPort) portId.open(
-                                "name", // Name of the application asking for the port
-                                10000   // Wait max. 10 sec. to acquire port
+                        port = portId.open("name", // Name of the application asking for the port
+                                10000 // Wait max. 10 sec. to acquire port
                         );
-                    } catch(PortInUseException e) {
+                    } catch (PortInUseException e) {
                         logger.info("Port already in use: {}", e);
                     }
                     // Set all the params.
                     // This may need to go in a try/catch block which throws UnsupportedCommOperationException
                     //
-                    try
-                    {
-                        port.setSerialPortParams(57600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-                    }
-                    catch (Exception e)
-                    {
+                    try {
+                        port.setSerialPortParams(57600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
+                                SerialPort.PARITY_NONE);
+                    } catch (Exception e) {
                         logger.info("Something went wrong during setting com parameters: {}", e.toString());
                     }
-
 
                     //
                     // Open the input Reader and output stream. The choice of a
@@ -152,8 +141,8 @@ public class EltakoHandler extends BaseThingHandler {
                     // both directions, since they allow for binary data transfer,
                     // not only character data transfer.
                     //
-                    BufferedReader is = null;  // for demo purposes only. A stream would be more typical.
-                    PrintStream    os = null;
+                    BufferedReader is = null; // for demo purposes only. A stream would be more typical.
+                    PrintStream os = null;
 
                     try {
                         is = new BufferedReader(new InputStreamReader(port.getInputStream()));
@@ -169,71 +158,74 @@ public class EltakoHandler extends BaseThingHandler {
                     // Unicode for its commands. An example to specify the encoding
                     // would look like:
                     //
-                    //     os = new PrintStream(port.getOutputStream(), true, "ISO-8859-1");
+                    // os = new PrintStream(port.getOutputStream(), true, "ISO-8859-1");
                     //
-                    try
-                    {
+                    try {
                         os = new PrintStream(port.getOutputStream(), true);
                         //
                         // Actual data communication would happen here
 
-                        //State state = (OnOffType) command;
+                        // State state = (OnOffType) command;
                         if (command.equals(OnOffType.ON)) {
-                            //updateState(CHANNEL_POWER, OnOffType.OFF);
+                            // updateState(CHANNEL_POWER, OnOffType.OFF);
                             // Write to the output
-                            //os.print("State ON");
-                            //os.write( 0x53 );
-                            os.write( 0xA5 );
-                            os.write( 0x5A );
-                            os.write( 0x0B );
-                            os.write( 0x07 );
-                            os.write( 0x02 );
-                            os.write( 0x64 );
-                            os.write( 0x00 );
-                            os.write( 0x09 );
-                            os.write( 0x00 );
-                            os.write( 0x00 );
-                            os.write( 0x00 );
-                            os.write( 0x03 );
-                            os.write( 0x00 );
-                            os.write( 0x84 );
+                            // os.print("State ON");
+                            // os.write( 0x53 );
+                            os.write(0xA5);
+                            os.write(0x5A);
+                            os.write(0x0B);
+                            os.write(0x07);
+                            os.write(0x02);
+                            os.write(0x64);
+                            os.write(0x00);
+                            os.write(0x09);
+                            os.write(0x00);
+                            os.write(0x00);
+                            os.write(0x00);
+                            os.write(0x03);
+                            os.write(0x00);
+                            os.write(0x84);
                         }
                         if (command.equals(OnOffType.OFF)) {
-                            //updateState(CHANNEL_POWER, OnOffType.OFF);
+                            // updateState(CHANNEL_POWER, OnOffType.OFF);
                             // Write to the output
-                            //os.print("State OFF");
-                            os.write( 0xA5 );
-                            os.write( 0x5A );
-                            os.write( 0x0B );
-                            os.write( 0x07 );
-                            os.write( 0x02 );
-                            os.write( 0x64 );
-                            os.write( 0x00 );
-                            os.write( 0x08 );
-                            os.write( 0x00 );
-                            os.write( 0x00 );
-                            os.write( 0x00 );
-                            os.write( 0x03 );
-                            os.write( 0x00 );
-                            os.write( 0x83 );
+                            // os.print("State OFF");
+                            os.write(0xA5);
+                            os.write(0x5A);
+                            os.write(0x0B);
+                            os.write(0x07);
+                            os.write(0x02);
+                            os.write(0x64);
+                            os.write(0x00);
+                            os.write(0x08);
+                            os.write(0x00);
+                            os.write(0x00);
+                            os.write(0x00);
+                            os.write(0x03);
+                            os.write(0x00);
+                            os.write(0x83);
                         }
                         //
                         // It is very important to close input and output streams as well
                         // as the port. Otherwise Java, driver and OS resources are not released.
                         //
-                        if (is != null) is.close();
-                        if (os != null) os.close();
-                        if (port != null) port.close();
-                    }
-                    catch (IOException e)
-                    {
+                        if (is != null) {
+                            is.close();
+                        }
+                        if (os != null) {
+                            os.close();
+                        }
+                        if (port != null) {
+                            port.close();
+                        }
+                    } catch (IOException e) {
                         logger.info("Something went wrong during setting com parameters: {}", e.toString());
                     }
-                // ############################################################
+                    // ############################################################
 
                 }
                 break;
-                // ...
+            // ...
             case CHANNEL_BRIGHTNESS:
                 logger.info("CHANNEL_BRIGHTNESS received command!");
                 break;
@@ -283,7 +275,6 @@ public class EltakoHandler extends BaseThingHandler {
             }
         });
 
-
         logger.info("Finished initializing!");
 
         // Note: When initialization can NOT be done set the status with more details for further
@@ -297,7 +288,8 @@ public class EltakoHandler extends BaseThingHandler {
     public void dispose() {
         logger.info("Dispose instance!");
 
-        if(this.pollingJob != null)
+        if (this.pollingJob != null) {
             pollingJob.cancel(true);
+        }
     }
 }

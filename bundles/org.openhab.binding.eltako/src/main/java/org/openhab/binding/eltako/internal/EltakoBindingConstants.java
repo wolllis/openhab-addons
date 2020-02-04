@@ -33,8 +33,9 @@ public class EltakoBindingConstants {
     public static final String CHANNEL_POWER = "power";
     public static final String CHANNEL_BRIGHTNESS = "brightness";
 
-    //List of all configuration parameters
+    // List of all configuration parameters
     public static final String PROPERTY_VENDOR = "vendor";
     public static final String PROPERTY_ID = "id";
     public static final String PROPERTY_PROTOCOL = "protocol";
+    public static final String PROPERTY_DEVICE_ID = "DeviceID";
 }

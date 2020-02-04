@@ -31,7 +31,7 @@
 				<label>Serial Comport Number</label>
 				<description>Defines which serial interface should be used for communication</description>
 			</parameter>
-			<parameter name="DeviceID" type="text" required="true">
+			<parameter name="DeviceID" type="integer" required="true">
 				<label>Eltako Bus Device ID</label>
 				<description>Used to identify the device on the Eltako Bus</description>
 			</parameter>

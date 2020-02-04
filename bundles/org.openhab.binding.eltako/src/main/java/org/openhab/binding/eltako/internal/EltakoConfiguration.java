@@ -22,5 +22,5 @@ public class EltakoConfiguration {
     /**
      * Sample configuration parameter. Replace with your own.
      */
-    public String config1;
+    public Integer DeviceID;
 }

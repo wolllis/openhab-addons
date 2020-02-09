@@ -39,11 +39,10 @@
 
 	</thing-type>
 
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>eltakoItem</item-type>
-		<label>Eltako Binding Channel</label>
-		<description>Sample channel for Eltako Binding</description>
-	</channel-type>
+<!-- Eltako Bridge -->
+    <bridge-type id="bridge">
+        <label>Eltako Gateway</label>
+        <description>The Eltako gateway connects to an ESP3 device.</description>
+    </bridge-type>
 
 </thing:thing-descriptions>

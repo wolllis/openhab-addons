@@ -12,6 +12,10 @@
  */
 package org.openhab.binding.eltako.internal;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
@@ -26,8 +30,14 @@ public class EltakoBindingConstants {
 
     private static final String BINDING_ID = "eltako";
 
+    // bridge
+    public final static ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
+
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_FUD14 = new ThingTypeUID(BINDING_ID, "FUD14");
+
+    public static final Set<ThingTypeUID> SUPPORTED_DEVICE_THING_TYPES_UIDS = new HashSet<>(
+            Arrays.asList(THING_TYPE_FUD14));
 
     // List of all Channel ids
     public static final String CHANNEL_POWER = "power";

@@ -14,11 +14,13 @@ package org.openhab.binding.eltako.internal;
 
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.THING_TYPE_FUD14;
 
-import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
@@ -36,7 +38,10 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.eltako", service = ThingHandlerFactory.class)
 public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_FUD14);
+    private final static Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream
+            .concat(EltakoBridgeHandler.SUPPORTED_THING_TYPES.stream(),
+                    EltakoBindingConstants.SUPPORTED_DEVICE_THING_TYPES_UIDS.stream())
+            .collect(Collectors.toSet());
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -47,7 +52,10 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_FUD14.equals(thingTypeUID)) {
+        if (EltakoBridgeHandler.SUPPORTED_THING_TYPES.contains(thingTypeUID)) {
+            EltakoBridgeHandler bridgeHandler = new EltakoBridgeHandler((Bridge) thing);
+            return bridgeHandler;
+        } else if (THING_TYPE_FUD14.equals(thingTypeUID)) {
             return new EltakoHandler(thing);
         }
 

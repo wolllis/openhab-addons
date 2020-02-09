@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -242,6 +243,13 @@ public class EltakoHandler extends BaseThingHandler {
     public void initialize() {
         logger.info("Start initializing!");
         config = getConfigAs(EltakoConfiguration.class);
+
+        @Nullable
+        List<String> mylist = null;
+
+        if (mylist != null) {
+            mylist.forEach(array -> logger.info("{}", array));
+        }
 
         Runnable runnable = new Runnable() {
             @Override

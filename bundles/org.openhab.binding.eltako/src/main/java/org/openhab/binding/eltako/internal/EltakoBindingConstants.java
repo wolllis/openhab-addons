@@ -28,7 +28,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class EltakoBindingConstants {
 
-    private static final String BINDING_ID = "eltako";
+    public static final String BINDING_ID = "eltako";
 
     // bridge
     public final static ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");

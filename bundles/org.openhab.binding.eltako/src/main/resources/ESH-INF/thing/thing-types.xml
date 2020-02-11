@@ -6,6 +6,11 @@
 
 	<!-- Eltako Thing Types -->
 	<thing-type id="FUD14">
+	
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>
+        
 		<label>FUD14</label>
 		<description>Universal Dimming Actor, Power MOSFET up to 400W</description>
 

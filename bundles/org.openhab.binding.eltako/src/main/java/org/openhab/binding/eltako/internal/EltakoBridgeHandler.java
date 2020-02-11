@@ -15,12 +15,16 @@ package org.openhab.binding.eltako.internal;
 
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.smarthome.config.core.status.ConfigStatusMessage;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -57,10 +61,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
      */
     private SerialPortManager serialPortManager;
 
+    /*
+     * Variables related to serial data handling
+     */
     private SerialPort serialPort;
-
     private String ComportName;
+    protected InputStream inputStream;
+    protected OutputStream outputStream;
 
+    /* TODO: Make this configurable in Bridge config */
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
 
     /*
@@ -70,6 +79,8 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         super(bridge);
         this.serialPortManager = serialPortManager;
         serialPort = null;
+        outputStream = null;
+        inputStream = null;
         ComportName = null;
     }
 
@@ -123,14 +134,28 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             }
 
             try {
+                // Set some parameters for newly opened serial interface
                 serialPort.setSerialPortParams(ELTAKO_DEFAULT_BAUD, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
                         SerialPort.PARITY_NONE);
+                serialPort.enableReceiveThreshold(1);
+                serialPort.enableReceiveTimeout(100);
             } catch (UnsupportedCommOperationException e) {
                 // Log event to console
                 logger.error("Something went wrong setting {} parameters: {}", ComportName, e);
                 // Set bridge status to OFFLINE
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                         "Something went wrong setting Comport parameters");
+            }
+
+            try {
+                inputStream = serialPort.getInputStream();
+                outputStream = serialPort.getOutputStream();
+            } catch (IOException e) {
+                // Log event to console
+                logger.error("Something went wrong acquireing input/output stream on {}: {}", ComportName, e);
+                // Set bridge status to OFFLINE
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "Something went wrong acquireing input/output stream");
             }
 
             // Log event to console
@@ -153,7 +178,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // Dispose bridge
         super.dispose();
 
-        // Close serial port if it exists
+        // Close serial port
         if (serialPort != null) {
             // Log event to console
             logger.debug("{} closed", ComportName);
@@ -162,7 +187,19 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             serialPort = null;
         }
 
-        // Reset variable if it exists
+        // Close output stream
+        if (outputStream != null) {
+            logger.debug("Closing serial output stream");
+            IOUtils.closeQuietly(outputStream);
+        }
+
+        // Close input stream
+        if (inputStream != null) {
+            logger.debug("Closeing serial input stream");
+            IOUtils.closeQuietly(inputStream);
+        }
+
+        // Reset variable
         if (ComportName != null) {
             ComportName = null;
         }
@@ -190,6 +227,21 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         switch (channelUID.getId()) {
             default:
                 break;
+        }
+    }
+
+    /*
+     * Write out some data from serial interface
+     */
+    public void write(byte[] buffer, int length) {
+        try {
+            logger.debug("Write data to serial interface with length: {}", String.valueOf(length));
+            outputStream.write(buffer);
+            outputStream.flush();
+        } catch (IOException e) {
+            logger.error("Write action on {} failed: {}", ComportName, e);
+            // Set bridge status to OFFLINE
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Write action failed");
         }
     }
 }

@@ -32,10 +32,6 @@
 
 		<!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
 		<config-description>
-			<parameter name="SerialComPort" type="integer" required="true">
-				<label>Serial Comport Number</label>
-				<description>Defines which serial interface should be used for communication</description>
-			</parameter>
 			<parameter name="DeviceID" type="integer" required="true">
 				<label>Eltako Bus Device ID</label>
 				<description>Used to identify the device on the Eltako Bus</description>
@@ -46,8 +42,18 @@
 
 <!-- Eltako Bridge -->
     <bridge-type id="bridge">
+    
         <label>Eltako Gateway</label>
-        <description>The Eltako gateway connects to an ESP3 device.</description>
+        
+        <description>Eltako gateway device which uses serial interface for data transfer</description>
+        
+        <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
+        <config-description>
+            <parameter name="SerialComPort" type="text" required="true">
+                <label>Serial Comport Number</label>
+                <description>e.g. "COM1" under Windows or "/dev/ttyUSB0" under Linux</description>
+            </parameter>
+        </config-description>
     </bridge-type>
 
 </thing:thing-descriptions>

@@ -13,7 +13,7 @@
 
 package org.openhab.binding.eltako.internal;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.THING_TYPE_BRIDGE;
+import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +59,8 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     private SerialPort serialPort;
 
+    private String ComportName;
+
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
 
     /*
@@ -68,6 +70,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         super(bridge);
         this.serialPortManager = serialPortManager;
         serialPort = null;
+        ComportName = null;
     }
 
     /*
@@ -87,30 +90,36 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                     "SerialPortManager could not be found");
         }
 
-        SerialPortIdentifier id = serialPortManager.getIdentifier("COM1");
+        // Acquire comport number from thing configuration (set by the user)
+        // ComportName = getConfigAs(EltakoConfiguration.class).SerialComPort;
+        ComportName = (String) getThing().getConfiguration().get(SERIALCOMPORT);
+        // Log event to console
+        logger.debug("Bridge configured to use comport => {}", ComportName);
+
+        SerialPortIdentifier id = serialPortManager.getIdentifier(ComportName);
 
         // Check if comport is available
         if (id == null) {
             // Log event to console
-            logger.error("Comport COM1 not available");
+            logger.error("Comport {} not available", ComportName);
             // Set bridge status to OFFLINE
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "COM1 not physical available");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Comport not physical available");
         } else if (id.isCurrentlyOwned() == true) {
             // Log event to console
-            logger.error("Comport COM1 already opened by another application");
+            logger.error("Comport {} already opened by another application", ComportName);
             // Set bridge status to OFFLINE
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                    "COM1 in use by another application");
+                    "Comport in use by another application");
         } else {
             // COM1 is available and can be opened
             try {
                 // Try opening COM1
                 serialPort = id.open(EltakoBindingConstants.BINDING_ID, 1000);
             } catch (PortInUseException e) {
-                logger.error("Port already in use: {}", e);
+                logger.error("{} already in use: {}", ComportName, e);
                 // Set bridge status to OFFLINE
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "COM1 in use by another application");
+                        "Comport in use by another application");
             }
 
             try {
@@ -118,14 +127,14 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                         SerialPort.PARITY_NONE);
             } catch (UnsupportedCommOperationException e) {
                 // Log event to console
-                logger.error("Something went wrong setting COM1 parameters: {}", e);
+                logger.error("Something went wrong setting {} parameters: {}", ComportName, e);
                 // Set bridge status to OFFLINE
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "Something went wrong setting COM1 parameters");
+                        "Something went wrong setting Comport parameters");
             }
 
             // Log event to console
-            logger.debug("COM1 opened successfully");
+            logger.debug("{} opened successfully", ComportName);
             // Update bridge status
             updateStatus(ThingStatus.ONLINE);
         }
@@ -147,10 +156,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // Close serial port if it exists
         if (serialPort != null) {
             // Log event to console
-            logger.debug("COM1 closed");
+            logger.debug("{} closed", ComportName);
             // Close comport to be used by other applications
             serialPort.close();
             serialPort = null;
+        }
+
+        // Reset variable if it exists
+        if (ComportName != null) {
+            ComportName = null;
         }
     }
 

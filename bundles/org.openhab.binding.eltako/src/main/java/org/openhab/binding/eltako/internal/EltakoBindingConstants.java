@@ -48,4 +48,7 @@ public class EltakoBindingConstants {
     public static final String PROPERTY_ID = "id";
     public static final String PROPERTY_PROTOCOL = "protocol";
     public static final String PROPERTY_DEVICE_ID = "DeviceID";
+
+    // Bridge config properties
+    public static final String SERIALCOMPORT = "SerialComPort";
 }

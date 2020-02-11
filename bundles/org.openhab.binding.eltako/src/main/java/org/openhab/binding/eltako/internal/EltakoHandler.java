@@ -83,8 +83,8 @@ public class EltakoHandler extends BaseThingHandler {
                     updateProperty(PROPERTY_ID, "I dont care");
                     updateProperty(PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
 
-                    int temp = getConfigAs(EltakoConfiguration.class).DeviceID;
-                    logger.info("DeviceID is: {}", temp);
+                    // int temp = getConfigAs(EltakoConfiguration.class).DeviceID;
+                    // logger.info("DeviceID is: {}", temp);
 
                     logger.info("Search for Serial Ports");
 

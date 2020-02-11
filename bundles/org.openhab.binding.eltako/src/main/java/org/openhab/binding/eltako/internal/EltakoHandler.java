@@ -140,6 +140,7 @@ public class EltakoHandler extends BaseThingHandler {
         updateProperty(PROPERTY_ID, "I dont care");
         updateProperty(PROPERTY_PROTOCOL, "Serial and EnOcean (I think)");
 
+        // Set bridge status to UNKNOWN (always good practice)
         updateStatus(ThingStatus.UNKNOWN);
 
         // Example for background initialization:

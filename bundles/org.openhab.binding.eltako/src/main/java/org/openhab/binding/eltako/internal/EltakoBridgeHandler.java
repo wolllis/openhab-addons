@@ -93,77 +93,80 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // Log event to console
         logger.debug("Initialize bridge => {}", this.getThing().getUID());
 
-        // Set bridge status to OFFLINE
-        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING, "trying to connect to gateway...");
+        // Set bridge status to UNKNOWN (always good practice)
+        updateStatus(ThingStatus.UNKNOWN);
 
         if (this.serialPortManager == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "SerialPortManager could not be found");
+                    "SerialPortManager instance could not be found");
         }
 
-        // Acquire comport number from thing configuration (set by the user)
-        // ComportName = getConfigAs(EltakoConfiguration.class).SerialComPort;
-        ComportName = (String) getThing().getConfiguration().get(SERIALCOMPORT);
-        // Log event to console
-        logger.debug("Bridge configured to use comport => {}", ComportName);
+        // Execute initialization in background (because of unknown runtime and potential blocking behavior)
+        scheduler.execute(() -> {
 
-        SerialPortIdentifier id = serialPortManager.getIdentifier(ComportName);
+            // Acquire comport number from thing configuration (set by the user)
+            ComportName = (String) getThing().getConfiguration().get(SERIALCOMPORT);
+            // Log event to console
+            logger.debug("Bridge configured to use comport => {}", ComportName);
 
-        // Check if comport is available
-        if (id == null) {
-            // Log event to console
-            logger.error("Comport {} not available", ComportName);
-            // Set bridge status to OFFLINE
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Comport not physical available");
-        } else if (id.isCurrentlyOwned() == true) {
-            // Log event to console
-            logger.error("Comport {} already opened by another application", ComportName);
-            // Set bridge status to OFFLINE
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                    "Comport in use by another application");
-        } else {
-            // COM1 is available and can be opened
-            try {
-                // Try opening COM1
-                serialPort = id.open(EltakoBindingConstants.BINDING_ID, 1000);
-            } catch (PortInUseException e) {
-                logger.error("{} already in use: {}", ComportName, e);
+            SerialPortIdentifier id = serialPortManager.getIdentifier(ComportName);
+
+            // Check if comport is available
+            if (id == null) {
+                // Log event to console
+                logger.error("Comport {} not available", ComportName);
+                // Set bridge status to OFFLINE
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "Comport not physical available");
+            } else if (id.isCurrentlyOwned() == true) {
+                // Log event to console
+                logger.error("Comport {} already opened by another application", ComportName);
                 // Set bridge status to OFFLINE
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                         "Comport in use by another application");
-            }
+            } else {
+                // COM1 is available and can be opened
+                try {
+                    // Try opening COM1
+                    serialPort = id.open(EltakoBindingConstants.BINDING_ID, 1000);
+                } catch (PortInUseException e) {
+                    logger.error("{} already in use: {}", ComportName, e);
+                    // Set bridge status to OFFLINE
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Comport in use by another application");
+                }
 
-            try {
-                // Set some parameters for newly opened serial interface
-                serialPort.setSerialPortParams(ELTAKO_DEFAULT_BAUD, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
-                        SerialPort.PARITY_NONE);
-                serialPort.enableReceiveThreshold(1);
-                serialPort.enableReceiveTimeout(100);
-            } catch (UnsupportedCommOperationException e) {
+                try {
+                    // Set some parameters for newly opened serial interface
+                    serialPort.setSerialPortParams(ELTAKO_DEFAULT_BAUD, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
+                            SerialPort.PARITY_NONE);
+                    serialPort.enableReceiveThreshold(1);
+                    serialPort.enableReceiveTimeout(100);
+                } catch (UnsupportedCommOperationException e) {
+                    // Log event to console
+                    logger.error("Something went wrong setting {} parameters: {}", ComportName, e);
+                    // Set bridge status to OFFLINE
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Something went wrong setting Comport parameters");
+                }
+
+                try {
+                    inputStream = serialPort.getInputStream();
+                    outputStream = serialPort.getOutputStream();
+                } catch (IOException e) {
+                    // Log event to console
+                    logger.error("Something went wrong acquireing input/output stream on {}: {}", ComportName, e);
+                    // Set bridge status to OFFLINE
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Something went wrong acquireing input/output stream");
+                }
+
                 // Log event to console
-                logger.error("Something went wrong setting {} parameters: {}", ComportName, e);
-                // Set bridge status to OFFLINE
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "Something went wrong setting Comport parameters");
+                logger.debug("{} opened successfully", ComportName);
+                // Update bridge status
+                updateStatus(ThingStatus.ONLINE);
             }
-
-            try {
-                inputStream = serialPort.getInputStream();
-                outputStream = serialPort.getOutputStream();
-            } catch (IOException e) {
-                // Log event to console
-                logger.error("Something went wrong acquireing input/output stream on {}: {}", ComportName, e);
-                // Set bridge status to OFFLINE
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "Something went wrong acquireing input/output stream");
-            }
-
-            // Log event to console
-            logger.debug("{} opened successfully", ComportName);
-            // Update bridge status
-            updateStatus(ThingStatus.ONLINE);
-        }
-
+        });
     }
 
     /*

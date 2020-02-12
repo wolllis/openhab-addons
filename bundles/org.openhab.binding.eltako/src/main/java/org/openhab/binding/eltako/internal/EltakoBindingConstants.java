@@ -40,9 +40,11 @@ public class EltakoBindingConstants {
     public static final Set<ThingTypeUID> SUPPORTED_DEVICE_THING_TYPES_UIDS = new HashSet<>(
             Arrays.asList(THING_TYPE_FUD14));
 
-    // List of all Channel ids
-    public static final String CHANNEL_POWER = "power";
+    // List of all FUD14 channel IDs
     public static final String CHANNEL_BRIGHTNESS = "brightness";
+    public static final String CHANNEL_SPEED = "speed";
+    public static final String CHANNEL_POWER = "power";
+    public static final String CHANNEL_BLOCKING = "blocking";
 
     // List of all configuration parameters
     public static final String PROPERTY_VENDOR = "vendor";

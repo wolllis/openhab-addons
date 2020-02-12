@@ -16,8 +16,10 @@
 
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
-			<channel id="power" typeId="system.power" />
-			<channel id="brightness" typeId="system.brightness" />
+            <channel id="brightness" typeId="system.brightness" />
+            <channel id="speed" typeId="DimmingSpeed" />
+            <channel id="power" typeId="system.power" />
+            <channel id="blocking" typeId="switchState" />
 		</channels>
 
 		<properties>
@@ -28,15 +30,15 @@
 		</properties>
 
 		<!-- Represenation-Properties are NOT shown to the user -->
-		<representation-property>EltakoBusID</representation-property>
+		<!-- <representation-property>EltakoBusID</representation-property> -->
 
 		<!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
-		<config-description>
-			<parameter name="DeviceID" type="integer" required="true">
-				<label>Eltako Bus Device ID</label>
-				<description>Used to identify the device on the Eltako Bus</description>
-			</parameter>
-		</config-description>
+		<!-- <config-description> -->
+		<!-- 	<parameter name="DeviceID" type="integer" required="true"> -->
+		<!-- 		<label>Eltako Bus Device ID</label> -->
+		<!-- 		<description>Used to identify the device on the Eltako Bus</description> -->
+		<!-- 	</parameter> -->
+		<!-- </config-description> -->
 
 	</thing-type>
 
@@ -55,5 +57,18 @@
             </parameter>
         </config-description>
     </bridge-type>
-
+	
+    <channel-type id="DimmingSpeed" advanced="false">
+        <item-type>Number</item-type>
+        <label>Dimming Speed</label>
+        <category>Light</category>
+        <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
+    </channel-type>
+    
+    <channel-type id="switchState">
+        <item-type>Switch</item-type>
+        <label>Switch State</label>
+        <description>On/off status of the switch</description>
+        <category>Switch</category>
+    </channel-type>
 </thing:thing-descriptions>

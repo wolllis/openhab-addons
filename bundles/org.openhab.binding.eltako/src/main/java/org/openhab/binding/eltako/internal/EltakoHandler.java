@@ -15,7 +15,9 @@ package org.openhab.binding.eltako.internal;
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.library.types.PercentType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -23,7 +25,6 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
-import org.eclipse.smarthome.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +44,37 @@ public class EltakoHandler extends BaseThingHandler {
 
     // private @Nullable ScheduledFuture<?> pollingJob;
 
+    private PercentType brightness;
+    private DecimalType speed;
+
     /*
      * Initializer method
      */
     public EltakoHandler(Thing thing) {
         super(thing);
+        brightness = PercentType.ZERO;
+        speed = DecimalType.ZERO;
+    }
+
+    /*
+     * Prepares the data used for the telegram and sends it out
+     */
+    private void PrepareTelegram(EltakoBridgeHandler bridgehandler) {
+
+        int temp = brightness.intValue();
+        int temp_1 = speed.intValue();
+
+        // Log event to console
+        logger.debug("Brightness level is {}", temp);
+        logger.debug("Speed level is {}", temp_1);
+
+        // Prepare OFF telegram
+        byte[] data = new byte[] { (byte) 0xA5, 0x5A, 0x0B, 0x07, 0x02, (byte) temp, (byte) temp_1, 0x09, 0x00, 0x00,
+                0x00, 0x03, 0x00, (byte) (32 + temp + temp_1) };
+
+        // Write data by calling bridge handler method
+        bridgehandler.write(data, 14);
+
     }
 
     /*
@@ -57,83 +84,67 @@ public class EltakoHandler extends BaseThingHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
 
         // Log event to console
-        logger.debug("Channel {} received command {}", channelUID, command);
+        logger.debug("Channel {} received command {} with class {}", channelUID, command, command.getClass());
 
-        switch (channelUID.getId()) {
-            case CHANNEL_POWER:
-                if (command instanceof RefreshType) {
-                    // TODO: handle data refresh
-                }
+        // Get bridge instance
+        Bridge bridge = this.getBridge();
 
-                // Check command type
-                if (command instanceof OnOffType) {
+        // Check for valid bridge instance
+        if (bridge != null) {
 
-                    // Get bridge instance
-                    Bridge bridge = this.getBridge();
+            // Get bridge handler instance
+            EltakoBridgeHandler bridgehandler = (EltakoBridgeHandler) bridge.getHandler();
 
-                    // Check for valid bridge instance
-                    if (bridge != null) {
+            // Check for valid bridge handler instance
+            if (bridgehandler != null) {
 
-                        // Get bridge handler instance
-                        EltakoBridgeHandler bridgehandler = (EltakoBridgeHandler) bridge.getHandler();
+                switch (channelUID.getId()) {
 
-                        // Check for valid bridge handler instance
-                        if (bridgehandler != null) {
-
-                            // In case ON was received
-                            if (command.equals(OnOffType.ON)) {
-
-                                // Prepare ON telegram
-                                byte[] data = new byte[] { (byte) 0xA5, 0x5A, 0x0B, 0x07, 0x02, 0x64, 0x00, 0x09, 0x00,
-                                        0x00, 0x00, 0x03, 0x00, (byte) 0x84 };
-
-                                // Write data by calling bridge handler method
-                                bridgehandler.write(data, 14);
-                            }
-
-                            // In case OFF was received
-                            if (command.equals(OnOffType.OFF)) {
-
-                                // Prepare OFF telegram
-                                byte[] data = new byte[] { (byte) 0xA5, 0x5A, 0x0B, 0x07, 0x02, 0x64, 0x00, 0x08, 0x00,
-                                        0x00, 0x00, 0x03, 0x00, (byte) 0x83 };
-
-                                // Write data by calling bridge handler method
-                                bridgehandler.write(data, 14);
-                            }
-                        } else {
-                            // Set thing status to OFFLINE
-                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED,
-                                    "No valid bridge handler instance available");
+                    case CHANNEL_BRIGHTNESS:
+                        if (command instanceof PercentType) {
+                            brightness = (PercentType) command;
+                            updateState(CHANNEL_BRIGHTNESS, brightness);
                         }
-                    } else {
-                        // Set thing status to OFFLINE
-                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED,
-                                "No valid bridge instance available");
-                    }
-
+                        if (command instanceof OnOffType) {
+                            if (command.equals(OnOffType.OFF)) {
+                                brightness = PercentType.ZERO;
+                                updateState(CHANNEL_BRIGHTNESS, brightness);
+                            }
+                        }
+                        if (command instanceof OnOffType) {
+                            if (command.equals(OnOffType.ON)) {
+                                brightness = PercentType.HUNDRED;
+                                updateState(CHANNEL_BRIGHTNESS, brightness);
+                            }
+                        }
+                        break;
+                    case CHANNEL_SPEED:
+                        if (command instanceof DecimalType) {
+                            speed = (DecimalType) command;
+                        }
+                        break;
+                    case CHANNEL_POWER:
+                    case CHANNEL_BLOCKING:
+                    default:
+                        // Log event to console
+                        logger.debug("Command {} is not supported by thing", command);
+                        break;
                 }
-                break;
-
-            case CHANNEL_BRIGHTNESS:
-                break;
+                PrepareTelegram(bridgehandler);
+            } else {
+                // Set thing status to OFFLINE
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED,
+                        "No valid bridge handler instance available");
+            }
+        } else {
+            // Set thing status to OFFLINE
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED,
+                    "No valid bridge instance available");
         }
     }
 
     @Override
     public void initialize() {
-
-        // // Create cyclic called task
-        // Runnable runnable = new Runnable() {
-        // @Override
-        // public void run() {
-        // // execute some binding specific polling code
-        // logger.info("Some scheduled stuff!");
-        // }
-        // };
-        //
-        // logger.info("Creating scheduler");
-        // pollingJob = scheduler.scheduleWithFixedDelay(runnable, 0, 1, TimeUnit.SECONDS);
 
         // Update vendor property
         updateProperty(PROPERTY_VENDOR, "Eltako");
@@ -160,9 +171,5 @@ public class EltakoHandler extends BaseThingHandler {
     @Override
     public void dispose() {
         logger.debug("Dispose thing instance");
-
-        // if (this.pollingJob != null) {
-        // pollingJob.cancel(true);
-        // }
     }
 }

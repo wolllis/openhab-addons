@@ -46,6 +46,8 @@ public class EltakoHandler extends BaseThingHandler {
 
     private PercentType brightness;
     private DecimalType speed;
+    private OnOffType power;
+    private OnOffType blocking;
 
     /*
      * Initializer method
@@ -54,6 +56,8 @@ public class EltakoHandler extends BaseThingHandler {
         super(thing);
         brightness = PercentType.ZERO;
         speed = DecimalType.ZERO;
+        power = OnOffType.OFF;
+        blocking = OnOffType.OFF;
     }
 
     /*
@@ -61,16 +65,26 @@ public class EltakoHandler extends BaseThingHandler {
      */
     private void PrepareTelegram(EltakoBridgeHandler bridgehandler) {
 
-        int temp = brightness.intValue();
-        int temp_1 = speed.intValue();
+        // Prepare channel values
+        int value_brightness = brightness.intValue();
+        int value_speed = speed.intValue();
+        int value_power;
+        int value_id = 3;
 
-        // Log event to console
-        logger.debug("Brightness level is {}", temp);
-        logger.debug("Speed level is {}", temp_1);
+        if (power.equals(OnOffType.ON)) {
+            value_power = 9;
+        } else {
+            value_power = 8;
+        }
 
-        // Prepare OFF telegram
-        byte[] data = new byte[] { (byte) 0xA5, 0x5A, 0x0B, 0x07, 0x02, (byte) temp, (byte) temp_1, 0x09, 0x00, 0x00,
-                0x00, 0x03, 0x00, (byte) (32 + temp + temp_1) };
+        if (blocking.equals(OnOffType.ON)) {
+            value_power += 4;
+        }
+
+        int crc = (0x0B + 0x07 + 0x02 + value_brightness + value_speed + value_power + value_id) % 256;
+        // Prepare telegram
+        byte[] data = new byte[] { (byte) 0xA5, 0x5A, 0x0B, 0x07, 0x02, (byte) value_brightness, (byte) value_speed,
+                (byte) value_power, 0x00, 0x00, 0x00, (byte) value_id, 0x00, (byte) crc };
 
         // Write data by calling bridge handler method
         bridgehandler.write(data, 14);
@@ -124,7 +138,33 @@ public class EltakoHandler extends BaseThingHandler {
                         }
                         break;
                     case CHANNEL_POWER:
+                        if (command instanceof OnOffType) {
+                            if (command.equals(OnOffType.OFF)) {
+                                power = OnOffType.OFF;
+                                updateState(CHANNEL_POWER, OnOffType.OFF);
+                            }
+                        }
+                        if (command instanceof OnOffType) {
+                            if (command.equals(OnOffType.ON)) {
+                                power = OnOffType.ON;
+                                updateState(CHANNEL_POWER, OnOffType.ON);
+                            }
+                        }
+                        break;
                     case CHANNEL_BLOCKING:
+                        if (command instanceof OnOffType) {
+                            if (command.equals(OnOffType.OFF)) {
+                                blocking = OnOffType.OFF;
+                                updateState(CHANNEL_BLOCKING, OnOffType.OFF);
+                            }
+                        }
+                        if (command instanceof OnOffType) {
+                            if (command.equals(OnOffType.ON)) {
+                                blocking = OnOffType.ON;
+                                updateState(CHANNEL_BLOCKING, OnOffType.ON);
+                            }
+                        }
+                        break;
                     default:
                         // Log event to console
                         logger.debug("Command {} is not supported by thing", command);

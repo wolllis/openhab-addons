@@ -87,7 +87,7 @@ public class EltakoHandler extends BaseThingHandler {
                 (byte) value_power, 0x00, 0x00, 0x00, (byte) value_id, 0x00, (byte) crc };
 
         // Write data by calling bridge handler method
-        bridgehandler.write(data, 14);
+        bridgehandler.serialWrite(data, 14);
 
     }
 

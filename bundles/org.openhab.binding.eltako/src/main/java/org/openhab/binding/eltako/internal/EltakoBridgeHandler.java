@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.smarthome.config.core.status.ConfigStatusMessage;
@@ -71,6 +72,8 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     /* TODO: Make this configurable in Bridge config */
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
+
+    private static final long BACKGROUND_DISCOVERY_DELAY = 1L;
 
     /*
      * Initializer method
@@ -181,13 +184,6 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // Dispose bridge
         super.dispose();
 
-        // Close serial port
-        if (serialPort != null) {
-            // Log event to console
-            logger.debug("{} closed", ComportName);
-            // Close comport to be used by other applications
-            serialPort.close();
-            serialPort = null;
         }
 
         // Close output stream
@@ -200,6 +196,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         if (inputStream != null) {
             logger.debug("Closeing serial input stream");
             IOUtils.closeQuietly(inputStream);
+        }
+
+        // Close serial port
+        if (serialPort != null) {
+            // Log event to console
+            logger.debug("{} closed", ComportName);
+            // Close comport to be used by other applications
+            serialPort.close();
+            serialPort = null;
         }
 
         // Reset variable
@@ -246,5 +251,11 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             // Set bridge status to OFFLINE
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Write action failed");
         }
+    }
+
+    public void startDiscovery(EltakoDeviceDiscoveryService service) {
+    }
+
+    public void stopDiscovery() {
     }
 }

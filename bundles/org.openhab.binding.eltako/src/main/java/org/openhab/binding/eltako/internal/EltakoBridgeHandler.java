@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -81,6 +82,9 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     private ScheduledFuture<?> serialPollingJob;
     private Boolean serialPollingThreadIsNotCanceled;
 
+    // Queue implementation for telegram handling
+    Queue<int[]> telegramQueue = new LinkedList<int[]>();
+
     // Device discovery service
     private ScheduledFuture<?> deviceDiscoveryJob;
     private Boolean DeviceDiscoveryThreadIsNotCanceled;
@@ -96,6 +100,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         inputStream = null;
         comportName = null;
         serialPollingThreadIsNotCanceled = null;
+        telegramQueue.clear();
         DeviceDiscoveryThreadIsNotCanceled = null;
     }
 
@@ -441,6 +446,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                 // Log event to console
                 logger.debug("Telegram Received: {}", strbuf);
                 // ############################################
+                int[] temp = new int[14];
+                // Convert from byte to int
+                for (int i = 0; i < 14; i++) {
+                    temp[i] = message[i] & 0xFF;
+                }
+                // Add received telegram to RxQueue
+                telegramQueue.add(temp);
+                // Log event to console
+                logger.debug("Element added to Queue. Size is now {}", telegramQueue.size());
                 // Reset byte counter
                 rxbytes = 0;
             }

@@ -77,9 +77,13 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
 
     // Our own thread pool for the long-running listener job
-    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> serialPollingJob;
     private Boolean serialPollingThreadIsNotCanceled;
+
+    // Device discovery service
+    private ScheduledFuture<?> deviceDiscoveryJob;
+    private Boolean DeviceDiscoveryThreadIsNotCanceled;
 
     /*
      * Initializer method
@@ -92,6 +96,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         inputStream = null;
         comportName = null;
         serialPollingThreadIsNotCanceled = null;
+        DeviceDiscoveryThreadIsNotCanceled = null;
     }
 
     /*
@@ -194,6 +199,18 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
         // Dispose bridge
         super.dispose();
+
+        // Cancel Device Discovery Thread
+        if (deviceDiscoveryJob != null) {
+            logger.debug("Canceling DeviceDiscoveryThread");
+            // SerialPollingJob.cancel(true);
+            DeviceDiscoveryThreadIsNotCanceled = false;
+            while (!deviceDiscoveryJob.isDone()) {
+                ;
+            }
+            deviceDiscoveryJob = null;
+            DeviceDiscoveryThreadIsNotCanceled = null;
+        }
 
         // Cancel SerialPolling Thread
         if (serialPollingJob != null) {
@@ -349,15 +366,47 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
      * This method is called by the EltakoDeviceDiscoveryService to signal a scan should be started
      */
     public void startDiscovery(EltakoDeviceDiscoveryService service) {
-        // TODO: Implement scan handling
+        // Start background thread for discovery of devices
+        deviceDiscoveryJob = scheduledExecutorService.schedule(DeviceDiscoveryThread, 1, TimeUnit.SECONDS);
+        // Set Discovery Thread exit condition
+        DeviceDiscoveryThreadIsNotCanceled = true;
     }
 
     /*
      * This method is called by the EltakoDeviceDiscoveryService to signal a scan should be stopped
      */
     public void stopDiscovery() {
-        // TODO: Implement scan handling
+        // Cancel Device Discovery Thread
+        if (deviceDiscoveryJob != null) {
+            logger.debug("Canceling DeviceDiscoveryThread");
+            // SerialPollingJob.cancel(true);
+            DeviceDiscoveryThreadIsNotCanceled = false;
+            while (!deviceDiscoveryJob.isDone()) {
+                ;
+            }
+            deviceDiscoveryJob = null;
+            DeviceDiscoveryThreadIsNotCanceled = null;
+        }
     }
+
+    /*
+     * Thread is executed as soon as the connection to serial interface is established and data can be transmitted
+     */
+    protected Runnable DeviceDiscoveryThread = () -> {
+        // Log event to console
+        logger.debug("DeviceDiscoveryThread => START");
+        while (DeviceDiscoveryThreadIsNotCanceled) {
+            // TODO: Search for devices
+            logger.debug("Tick");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                logger.error("Sleep does not work in DeviceDiscoveryThread: {}", e);
+            }
+        }
+        // Log event to console
+        logger.debug("DeviceDiscoveryThread => EXIT");
+    };
 
     /*
      * Thread is executed as soon as the connection to serial interface is established and data can be transmitted

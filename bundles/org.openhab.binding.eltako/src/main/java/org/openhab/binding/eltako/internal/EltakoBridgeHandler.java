@@ -188,6 +188,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                 serialPollingJob = scheduledExecutorService.schedule(SerialPollingThread, 1, TimeUnit.SECONDS);
                 // Update bridge status
                 updateStatus(ThingStatus.ONLINE);
+                // TODO: Check if FAM14 is in correct mode and change it to be able to transmit messages with devices
             }
         });
     }
@@ -285,10 +286,10 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     /*
      * Write data to serial interface
      */
-    protected void serialWrite(byte[] buffer, int length) {
+    protected void serialWrite(int[] message, int length) {
 
         // Safety check
-        if (length == 0 || buffer == null) {
+        if (length == 0 || message == null) {
             // Log event to console
             logger.error("Serial Write: Length is zero or invalid buffer");
             return;
@@ -306,12 +307,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         StringBuffer strbuf = new StringBuffer();
         // Create string out of byte data
         for (int i = 0; i < length; i++) {
-            strbuf.append(String.format("%02X ", buffer[i] & 0xFF));
+            strbuf.append(String.format("%02X ", message[i]));
         }
         // Log event to console
         logger.debug("Serial Write: {}", strbuf);
         // ############################################
-
+        byte[] buffer = new byte[length];
+        for (int i = 0; i < length; i++) {
+            buffer[i] = (byte) message[i];
+        }
         // Pass data to output steam
         try {
             outputStream.write(buffer, 0, length);
@@ -400,8 +404,28 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     protected Runnable DeviceDiscoveryThread = () -> {
         // Log event to console
         logger.debug("DeviceDiscoveryThread => START");
+
+        // - Set FAM14 into config mode (A5 5A AB FF 00 00 00 00 00 00 00 00 FF A9)
+        int[] message = new int[14];
+        int[] data = new int[] { 0, 0, 0, 0 };
+        int[] id = new int[] { 0, 0, 0, 0 };
+        constuctMessage(message, 5, 0xff, data, id, 0xFF);
+        // Prepare data to be written to log
+        StringBuffer strbuf = new StringBuffer();
+        for (int i = 0; i < 14; i++) {
+            strbuf.append(String.format("%02X ", message[i]));
+        }
+        serialWrite(message, 14);
+        // Log event to console
+        logger.debug("DeviceDiscoveryThread Message: {}", strbuf);
+
         while (DeviceDiscoveryThreadIsNotCanceled) {
-            // TODO: Search for devices
+            // TODO: Search for devices:
+            // - Wait for FAM14 to respond with correct mode (a5 5a 8b f0 ff 01 7f 00 07 ff 17 00 00 17)
+            // - Send search telegrams for each ID (1 to 254)
+            // - Wait for devices to respond
+            // - List all found devices to the user (maybe also add them as things?)
+            // - Set FAM14 back into gateway mode
             logger.debug("Tick");
             try {
                 Thread.sleep(2000);
@@ -460,4 +484,27 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             }
         }
     };
+
+    protected void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {
+        // Fill message with data
+        message[0] = 0xA5;
+        message[1] = 0x5A;
+        message[2] = (header_ident << 5) + 0x0B;
+        message[3] = org;
+        message[4] = data[0];
+        message[5] = data[1];
+        message[6] = data[2];
+        message[7] = data[3];
+        message[8] = id[0];
+        message[9] = id[1];
+        message[10] = id[2];
+        message[11] = id[3];
+        message[12] = status;
+        // Calculate CRC from message data (excluding sync bytes)
+        for (int i = 2; i < 13; i++) {
+            message[13] += message[i];
+        }
+        // CRC is only a single byte so we break it down to 8bit
+        message[13] = message[13] % 256;
+    }
 }

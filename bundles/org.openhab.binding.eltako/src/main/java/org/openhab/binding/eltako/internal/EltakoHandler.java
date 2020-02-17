@@ -83,8 +83,8 @@ public class EltakoHandler extends BaseThingHandler {
 
         int crc = (0x0B + 0x07 + 0x02 + value_brightness + value_speed + value_power + value_id) % 256;
         // Prepare telegram
-        byte[] data = new byte[] { (byte) 0xA5, 0x5A, 0x0B, 0x07, 0x02, (byte) value_brightness, (byte) value_speed,
-                (byte) value_power, 0x00, 0x00, 0x00, (byte) value_id, 0x00, (byte) crc };
+        int[] data = new int[] { 0xA5, 0x5A, 0x0B, 0x07, 0x02, value_brightness, value_speed, value_power, 0x00, 0x00,
+                0x00, value_id, 0x00, crc };
 
         // Write data by calling bridge handler method
         bridgehandler.serialWrite(data, 14);

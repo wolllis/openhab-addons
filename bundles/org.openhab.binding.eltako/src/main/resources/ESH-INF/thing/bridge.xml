@@ -6,11 +6,8 @@
 	
 	<!-- Eltako Bridge -->
     <bridge-type id="bridge">
-    
         <label>Eltako Gateway</label>
-        
         <description>Eltako gateway device which uses serial interface for data transfer</description>
-        
         <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description>
             <parameter name="SerialComPort" type="text" required="true">
@@ -18,7 +15,5 @@
                 <description>e.g. "COM1" under Windows or "/dev/ttyUSB0" under Linux</description>
             </parameter>
         </config-description>
-        
     </bridge-type>
-
 </thing:thing-descriptions>

@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link EnOceanDeviceDiscoveryService} is used to discover Enocean devices and to accept teach in requests.
+ * The {@link EltakoDeviceDiscoveryService} is used to discover Eltako devices
  *
- * @author Daniel Weber - Initial contribution
+ * @author Martin Wenske - Initial contribution
  */
 
 public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
@@ -50,6 +50,9 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         super.deactivate();
     }
 
+    /**
+     * Device scan should be started => Inform bridge about it
+     */
     @Override
     protected void startScan() {
         if (bridgeHandler == null) {
@@ -60,6 +63,9 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         bridgeHandler.startDiscovery(this);
     }
 
+    /**
+     * Device scan should be stopped => Inform bridge about it
+     */
     @Override
     public synchronized void stopScan() {
         if (bridgeHandler == null) {
@@ -71,6 +77,9 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         super.stopScan();
     }
 
+    /**
+     * Called by framework in order to get supported thing types
+     */
     @Override
     public Set<@NonNull ThingTypeUID> getSupportedThingTypes() {
         logger.debug("Get supported thing types");

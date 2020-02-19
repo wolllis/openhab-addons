@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 @Component(configurationPid = "binding.eltako", service = ThingHandlerFactory.class)
 public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
-    /*
+    /**
      * Create list of things which are supported by this binding
      */
     private final static Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream
@@ -64,7 +64,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
      */
     private Logger logger = LoggerFactory.getLogger(EltakoHandlerFactory.class);
 
-    /*
+    /**
      * Public getter method to let framework know which things are available for this binding
      */
     @Override
@@ -72,7 +72,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
         return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
     }
 
-    /*
+    /**
      * CreateHandler() method is called in case a new thing should be added (this includes bridge things).
      * It need to return the created instance of the thing.
      */
@@ -101,6 +101,9 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
         return null;
     }
 
+    /**
+     * This method is called when a thing handler should be removed.
+     */
     @Override
     protected void removeHandler(ThingHandler thingHandler) {
         // Log event to console
@@ -113,11 +116,14 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
             }
         } else {
             // Log event to console
-            logger.debug("Attempt of removing discovery handler {} failed. Handler not available.", thingHandler);
+            logger.error("Attempt of removing discovery handler {} failed. Handler not available.", thingHandler);
         }
     }
 
-    private void registerDeviceDiscoveryService(EltakoBridgeHandler handler) {
+    /**
+     * This method is called in order to create and register the discovery service handler.
+     */
+    protected void registerDeviceDiscoveryService(EltakoBridgeHandler handler) {
         EltakoDeviceDiscoveryService discoveryService = new EltakoDeviceDiscoveryService(handler);
         discoveryService.activate();
         this.discoveryServiceRegs.put(handler.getThing().getUID(), bundleContext

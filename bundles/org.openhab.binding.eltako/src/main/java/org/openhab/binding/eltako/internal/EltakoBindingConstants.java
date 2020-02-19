@@ -54,4 +54,7 @@ public class EltakoBindingConstants {
 
     // Bridge config properties
     public static final String SERIALCOMPORT = "SerialComPort";
+
+    // Bridge config properties
+    public static final String FUD14_ID = "ID";
 }

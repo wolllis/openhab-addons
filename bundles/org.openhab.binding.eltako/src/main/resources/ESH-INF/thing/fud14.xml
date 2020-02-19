@@ -6,14 +6,11 @@
 
 	<!-- Eltako Thing Types -->
 	<thing-type id="FUD14">
-	
         <supported-bridge-type-refs>
             <bridge-type-ref id="bridge" />
         </supported-bridge-type-refs>
-        
 		<label>FUD14</label>
 		<description>Universal Dimming Actor, Power MOSFET up to 400W</description>
-
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
             <channel id="brightness" typeId="system.brightness" />
@@ -21,34 +18,28 @@
             <channel id="power" typeId="system.power" />
             <channel id="blocking" typeId="switchState" />
 		</channels>
-
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
-			<property name="vendor">MyVendor</property>
+			<property name="Version">MyVendor</property>
 			<property name="id">MyId</property>
 			<property name="protocol">MyProtokol</property>
 		</properties>
-
 		<!-- Represenation-Properties are NOT shown to the user -->
 		<!-- <representation-property>EltakoBusID</representation-property> -->
-
-		<!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
-		<!-- <config-description> -->
-		<!-- 	<parameter name="DeviceID" type="integer" required="true"> -->
-		<!-- 		<label>Eltako Bus Device ID</label> -->
-		<!-- 		<description>Used to identify the device on the Eltako Bus</description> -->
-		<!-- 	</parameter> -->
-		<!-- </config-description> -->
-
+        <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
+        <config-description>
+            <parameter name="ID" type="text" pattern="([0-9A-Fa-f]{8})" required="true">
+                <label>Device Identification</label>
+                <description>Needs to match the ID of the device you want to control</description>
+            </parameter>
+        </config-description>
 	</thing-type>
-	
     <channel-type id="DimmingSpeed" advanced="false">
         <item-type>Number</item-type>
         <label>Dimming Speed</label>
         <category>Light</category>
         <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
     </channel-type>
-    
     <channel-type id="switchState">
         <item-type>Switch</item-type>
         <label>Switch State</label>

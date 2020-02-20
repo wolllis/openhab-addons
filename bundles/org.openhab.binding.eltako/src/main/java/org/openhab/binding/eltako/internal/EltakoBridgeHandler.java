@@ -407,7 +407,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     }
 
     /**
-     * Thread is executed as soon as the connection to serial interface is established and data can be transmitted
+     * Thread is executed for the time devices should be discovered
      */
     protected Runnable DeviceDiscoveryThread = () -> {
         // Log event to console
@@ -451,52 +451,90 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     protected Runnable SerialPollingThread = () -> {
         int rxbytes = 0;
         byte[] buffer = new byte[14];
-        byte[] message = new byte[14];
+        int[] telegram = new int[14];
 
         // Never stop reading data from serial interface
         while (serialPollingThreadIsNotCanceled) {
-            // Read received data (received data length is not guaranteed)
-            int bytesRead = serialRead(buffer, 14 - rxbytes);
-            // Data received?
-            if (bytesRead > 0) {
-                // Add serial data to message
-                for (int i = 0; i < bytesRead; i++) {
-                    message[i + rxbytes] = buffer[i];
+            int bytesRead;
+            if (rxbytes == 0) {
+                // Read single byte until we receive the sync byte
+                bytesRead = serialRead(buffer, 1);
+                // Check for first byte to be 0xA5
+                if (bytesRead > 0) {
+                    if ((buffer[0] & 0xFF) == 0xA5) {
+                        // Log event to console
+                        logger.debug("Sync Byte 0xA5 received");
+                        // Copy Sync byte
+                        telegram[0] = buffer[0] & 0xFF;
+                        // Increase counter
+                        rxbytes = 1;
+                    }
                 }
-            }
-            // Track how much data has been received
-            rxbytes += bytesRead;
-            // Check if a complete telegram (14 Bytes) has been received
-            if (rxbytes == 14) {
-                // ############################################
-                // Prepare data to be written to log
-                StringBuffer strbuf = new StringBuffer();
-                // Create string out of byte data
-                for (int i = 0; i < 14; i++) {
-                    strbuf.append(String.format("%02X ", message[i] & 0xFF));
+            } else if (rxbytes == 1) {
+                // Read single byte until we receive the sync byte
+                bytesRead = serialRead(buffer, 1);
+                // Check for first byte to be 0xA5
+                if (bytesRead > 0) {
+                    if ((buffer[0] & 0xFF) == 0x5A) {
+                        // Log event to console
+                        logger.debug("Sync Byte 0x5A received");
+                        // Copy Sync byte
+                        telegram[1] = buffer[0] & 0xFF;
+                        // Increase counter
+                        rxbytes = 2;
+                    } else if ((buffer[0] & 0xFF) == 0xA5) {
+                        // do nothing. sync byte still valid
+                        // Log event to console
+                        logger.warn(
+                                "Missmatch of Eltako telegram sync byte! This may be an indication for ether bad connection, high bus load or defective device.");
+                    } else {
+                        // Log event to console
+                        logger.warn(
+                                "Missmatch of Eltako telegram sync byte! This may be an indication for ether bad connection, high bus load or defective device.");
+                        // Reset byte counter
+                        rxbytes = 0;
+                    }
                 }
-                // Log event to console
-                logger.debug("Telegram Received: {}", strbuf);
-                // ############################################
-                int[] temp = new int[14];
-                // Convert from byte to int
-                for (int i = 0; i < 14; i++) {
-                    temp[i] = message[i] & 0xFF;
+            } else {
+                // Read received data (received data length is not guaranteed)
+                bytesRead = serialRead(buffer, 14 - rxbytes);
+                // Data received?
+                if (bytesRead > 0) {
+                    // Add serial data to message
+                    for (int i = 0; i < bytesRead; i++) {
+                        telegram[i + rxbytes] = buffer[i] & 0xFF;
+                    }
                 }
-                // Add received telegram to RxQueue
-                // telegramQueue.add(temp);
-                // Log event to console
-                // logger.debug("Element added to Queue. Size is now {}", telegramQueue.size());
-                // TODO: Maybe add queue later
+                // Track how much data has been received
+                rxbytes += bytesRead;
+                // Check if a complete telegram (14 Bytes) has been received
+                if (rxbytes == 14) {
+                    // ############################################
+                    // Prepare data to be written to log
+                    StringBuffer strbuf = new StringBuffer();
+                    // Create string out of byte data
+                    for (int i = 0; i < 14; i++) {
+                        strbuf.append(String.format("%02X", telegram[i]));
+                    }
+                    // Log event to console
+                    logger.debug("Telegram Received: {}", strbuf);
+                    // ############################################
 
-                byte senderId[] = { 0, 0, 0, 1 };
-                long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
-                HashSet<EltakoTelegramListener> pl = listeners.get(s);
-                if (pl != null) {
-                    pl.forEach(l -> l.telegramReceived(temp));
+                    // Add received telegram to RxQueue
+                    // telegramQueue.add(temp);
+                    // Log event to console
+                    // logger.debug("Element added to Queue. Size is now {}", telegramQueue.size());
+                    // TODO: Maybe add queue later
+
+                    byte senderId[] = { 0, 0, 0, 1 };
+                    long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
+                    HashSet<EltakoTelegramListener> pl = listeners.get(s);
+                    if (pl != null) {
+                        pl.forEach(l -> l.telegramReceived(telegram));
+                    }
+                    // Reset byte counter
+                    rxbytes = 0;
                 }
-                // Reset byte counter
-                rxbytes = 0;
             }
         }
     };

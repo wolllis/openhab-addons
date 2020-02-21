@@ -554,6 +554,8 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         message[10] = id[2];
         message[11] = id[3];
         message[12] = status;
+        message[13] = 0;
+
         // Calculate CRC from message data (excluding sync bytes)
         for (int i = 2; i < 13; i++) {
             message[13] += message[i];

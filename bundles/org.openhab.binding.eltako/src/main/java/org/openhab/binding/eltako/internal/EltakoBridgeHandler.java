@@ -413,34 +413,44 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // Log event to console
         logger.debug("DeviceDiscoveryThread => START");
 
-        // - Set FAM14 into config mode (A5 5A AB FF 00 00 00 00 00 00 00 00 FF A9)
+        // while (DeviceDiscoveryThreadIsNotCanceled) {
+
         int[] message = new int[14];
         int[] data = new int[] { 0, 0, 0, 0 };
         int[] id = new int[] { 0, 0, 0, 0 };
-        constuctMessage(message, 5, 0xff, data, id, 0xFF);
-        // Prepare data to be written to log
-        StringBuffer strbuf = new StringBuffer();
-        for (int i = 0; i < 14; i++) {
-            strbuf.append(String.format("%02X ", message[i]));
-        }
-        serialWrite(message, 14);
-        // Log event to console
-        logger.debug("DeviceDiscoveryThread Message: {}", strbuf);
 
-        while (DeviceDiscoveryThreadIsNotCanceled) {
-            // TODO: Search for devices:
-            // - Wait for FAM14 to respond with correct mode (a5 5a 8b f0 ff 01 7f 00 07 ff 17 00 00 17)
-            // - Send search telegrams for each ID (1 to 254)
-            // - Wait for devices to respond
-            // - List all found devices to the user (maybe also add them as things?)
-            // - Set FAM14 back into gateway mode
-            logger.debug("Tick");
+        for (int i = 0; i < 256; i++) {
+            // Check if Thread should end
+            if (!DeviceDiscoveryThreadIsNotCanceled) {
+                break;
+            }
+            // Force FAM14 into config mode
+            if (i == 0) {
+                // - Set FAM14 into config mode (A5 5A AB FF 00 00 00 00 00 00 00 00 FF A9)
+                constuctMessage(message, 5, 0xff, data, id, 0xFF);
+                // Log event to console
+                logger.debug("DiscoveryService: Force FAM14 into config mode");
+            } else if (i == 255) {
+                // Force FAM14 into telegram mode (a5 5a ab ff 00 00 00 00 00 00 00 00 00 aa)
+                constuctMessage(message, 5, 0xff, data, id, 0x00);
+                // Log event to console
+                logger.debug("DiscoveryService: Force FAM14 into telegram mode");
+            } else {
+                // Scan for ID (a5 5a ab f0 00 00 00 00 00 00 00 00 02 9d => ID2)
+                constuctMessage(message, 5, 0xf0, data, id, i);
+                // Log event to console
+                logger.debug("DiscoveryService: Search for device with ID {}", i);
+            }
+            serialWrite(message, 14);
+
+            // Wait some time
             try {
-                Thread.sleep(2000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 logger.error("Sleep does not work in DeviceDiscoveryThread: {}", e);
             }
         }
+        // }
         // Log event to console
         logger.debug("DeviceDiscoveryThread => EXIT");
     };

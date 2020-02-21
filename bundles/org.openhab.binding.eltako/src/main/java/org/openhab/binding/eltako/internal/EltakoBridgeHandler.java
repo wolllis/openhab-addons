@@ -93,6 +93,9 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     protected Map<Long, HashSet<EltakoTelegramListener>> listeners;
 
+    EltakoDeviceDiscoveryService DiscoveryService;
+    // EltakoCreateDevice
+
     /**
      * Initializer method
      */
@@ -107,6 +110,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         telegramQueue.clear();
         DeviceDiscoveryThreadIsNotCanceled = null;
         listeners = new HashMap<>();
+        DiscoveryService = null;
     }
 
     /**
@@ -273,6 +277,10 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
         Collection<ConfigStatusMessage> configStatusMessages = new LinkedList<>();
         return configStatusMessages;
+    }
+
+    public void setDiscoveryService(EltakoDeviceDiscoveryService service) {
+        DiscoveryService = service;
     }
 
     /**
@@ -451,6 +459,9 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             }
         }
         // }
+        if (DiscoveryService != null) {
+            DiscoveryService.createdevice();
+        }
         // Log event to console
         logger.debug("DeviceDiscoveryThread => EXIT");
     };

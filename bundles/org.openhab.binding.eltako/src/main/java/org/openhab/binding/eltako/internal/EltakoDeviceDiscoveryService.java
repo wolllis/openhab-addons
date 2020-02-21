@@ -12,13 +12,15 @@
  */
 package org.openhab.binding.eltako.internal;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.SUPPORTED_DEVICE_THING_TYPES_UIDS;
+import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
+import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     public EltakoDeviceDiscoveryService(EltakoBridgeHandler bridgeHandler) {
         super(null, 60, false);
         this.bridgeHandler = bridgeHandler;
+        bridgeHandler.setDiscoveryService(this);
     }
 
     /**
@@ -86,4 +89,13 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         return SUPPORTED_DEVICE_THING_TYPES_UIDS;
     }
 
+    public void createdevice() {
+        ThingTypeUID thingTypeUID = new ThingTypeUID(BINDING_ID, "FUD14");
+        ThingUID thingUID = new ThingUID(thingTypeUID, bridgeHandler.getThing().getUID(), "Tada");
+
+        DiscoveryResultBuilder discoveryResultBuilder = DiscoveryResultBuilder.create(thingUID)
+                .withBridge(bridgeHandler.getThing().getUID());
+
+        thingDiscovered(discoveryResultBuilder.build());
+    }
 }

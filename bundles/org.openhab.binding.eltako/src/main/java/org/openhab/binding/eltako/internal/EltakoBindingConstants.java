@@ -49,10 +49,10 @@ public class EltakoBindingConstants {
     // List of all configuration parameters
     public static final String PROPERTY_VERSION = "Version";
     public static final String PROPERTY_DEVICE_ID = "DeviceID";
+    public static final String FUD14_ID = "ID";
 
     // Bridge config properties
     public static final String SERIALCOMPORT = "SerialComPort";
 
     // Bridge config properties
-    public static final String FUD14_ID = "ID";
 }

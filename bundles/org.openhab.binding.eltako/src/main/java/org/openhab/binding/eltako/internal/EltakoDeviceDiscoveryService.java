@@ -91,10 +91,13 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
 
     public void createdevice() {
         ThingTypeUID thingTypeUID = new ThingTypeUID(BINDING_ID, "FUD14");
-        ThingUID thingUID = new ThingUID(thingTypeUID, bridgeHandler.getThing().getUID(), "Tada");
+        ThingUID thingUID = new ThingUID(thingTypeUID, bridgeHandler.getThing().getUID(), "00000001");
 
         DiscoveryResultBuilder discoveryResultBuilder = DiscoveryResultBuilder.create(thingUID)
                 .withBridge(bridgeHandler.getThing().getUID());
+
+        discoveryResultBuilder.withProperty(PROPERTY_DEVICE_ID, "00000001");
+        discoveryResultBuilder.withProperty(FUD14_ID, "00000001");
 
         thingDiscovered(discoveryResultBuilder.build());
     }

@@ -73,7 +73,7 @@ public class EltakoHandler extends BaseThingHandler implements EltakoTelegramLis
         // Acquire device ID from thing configuration (set by the user)
         this.deviceId = Integer.parseInt(getThing().getConfiguration().get(FUD14_ID).toString(), 16);
         // Update thing property
-        updateProperty(PROPERTY_VERSION, "Unknown");
+        updateProperty(FUD14_HARDWARE_VERSION, "Unknown");
 
         // Set thing status to UNKNOWN
         this.updateStatus(ThingStatus.UNKNOWN);

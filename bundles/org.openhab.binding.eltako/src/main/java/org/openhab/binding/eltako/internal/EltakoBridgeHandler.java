@@ -81,8 +81,9 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     // Our own thread pool for the long-running listener job
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> serialPollingJob;
-    private Boolean serialPollingThreadIsNotCanceled;
+    private ScheduledFuture<?> bridgePollingJob;
+    private Boolean bridgePollingThreadIsNotCanceled;
+    protected Boolean waitForGateway;
 
     // Queue implementation for telegram handling
     Queue<int[]> telegramQueue = new LinkedList<int[]>();
@@ -99,9 +100,10 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         outputStream = null;
         inputStream = null;
         comportName = null;
-        serialPollingThreadIsNotCanceled = null;
+        bridgePollingThreadIsNotCanceled = null;
         telegramQueue.clear();
         listeners = new HashMap<>();
+        waitForGateway = false;
     }
 
     /**
@@ -183,12 +185,9 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                 // Log event to console
                 logger.debug("{} opened successfully", comportName);
                 // Set Polling Thread exit condition
-                serialPollingThreadIsNotCanceled = true;
+                bridgePollingThreadIsNotCanceled = true;
                 // Start background thread for receiving serial data
-                serialPollingJob = scheduledExecutorService.schedule(SerialPollingThread, 1, TimeUnit.SECONDS);
-                // Update bridge status
-                updateStatus(ThingStatus.ONLINE);
-                // TODO: Check if FAM14 is in correct mode and change it to be able to transmit messages with devices
+                bridgePollingJob = scheduledExecutorService.schedule(bridgePollingThread, 0, TimeUnit.SECONDS);
             }
         });
     }
@@ -207,15 +206,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         super.dispose();
 
         // Cancel SerialPolling Thread
-        if (serialPollingJob != null) {
+        if (bridgePollingJob != null) {
             logger.debug("Canceling SerialPollingThread");
             // SerialPollingJob.cancel(true);
-            serialPollingThreadIsNotCanceled = false;
-            while (!serialPollingJob.isDone()) {
+            bridgePollingThreadIsNotCanceled = false;
+            while (!bridgePollingJob.isDone()) {
                 ;
             }
-            serialPollingJob = null;
-            serialPollingThreadIsNotCanceled = null;
+            bridgePollingJob = null;
+            bridgePollingThreadIsNotCanceled = null;
         }
 
         // Close output stream
@@ -362,98 +361,144 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         return rxcount;
     }
 
-    /**
-     * Thread is executed as soon as the connection to serial interface is established and data can be transmitted
-     */
-    protected Runnable SerialPollingThread = () -> {
-        int rxbytes = 0;
+    int rxbytes = 0;
+
+    protected void handleSerialData() {
         byte[] buffer = new byte[14];
         int[] telegram = new int[14];
+        int bytesRead;
 
-        // Never stop reading data from serial interface
-        while (serialPollingThreadIsNotCanceled) {
-            int bytesRead;
-            if (rxbytes == 0) {
-                // Read single byte until we receive the sync byte
-                bytesRead = serialRead(buffer, 1);
-                // Check for first byte to be 0xA5
-                if (bytesRead > 0) {
-                    if ((buffer[0] & 0xFF) == 0xA5) {
-                        // Log event to console
-                        logger.debug("Sync Byte 0xA5 received");
-                        // Copy Sync byte
-                        telegram[0] = buffer[0] & 0xFF;
-                        // Increase counter
-                        rxbytes = 1;
-                    }
-                }
-            } else if (rxbytes == 1) {
-                // Read single byte until we receive the sync byte
-                bytesRead = serialRead(buffer, 1);
-                // Check for first byte to be 0xA5
-                if (bytesRead > 0) {
-                    if ((buffer[0] & 0xFF) == 0x5A) {
-                        // Log event to console
-                        logger.debug("Sync Byte 0x5A received");
-                        // Copy Sync byte
-                        telegram[1] = buffer[0] & 0xFF;
-                        // Increase counter
-                        rxbytes = 2;
-                    } else if ((buffer[0] & 0xFF) == 0xA5) {
-                        // do nothing. sync byte still valid
-                        // Log event to console
-                        logger.warn(
-                                "Missmatch of Eltako telegram sync byte! This may be an indication for ether bad connection, high bus load or defective device.");
-                    } else {
-                        // Log event to console
-                        logger.warn(
-                                "Missmatch of Eltako telegram sync byte! This may be an indication for ether bad connection, high bus load or defective device.");
-                        // Reset byte counter
-                        rxbytes = 0;
-                    }
-                }
-            } else {
-                // Read received data (received data length is not guaranteed)
-                bytesRead = serialRead(buffer, 14 - rxbytes);
-                // Data received?
-                if (bytesRead > 0) {
-                    // Add serial data to message
-                    for (int i = 0; i < bytesRead; i++) {
-                        telegram[i + rxbytes] = buffer[i] & 0xFF;
-                    }
-                }
-                // Track how much data has been received
-                rxbytes += bytesRead;
-                // Check if a complete telegram (14 Bytes) has been received
-                if (rxbytes == 14) {
-                    // ############################################
-                    // Prepare data to be written to log
-                    StringBuffer strbuf = new StringBuffer();
-                    // Create string out of byte data
-                    for (int i = 0; i < 14; i++) {
-                        strbuf.append(String.format("%02X", telegram[i]));
-                    }
+        if (rxbytes == 0) {
+            // Read single byte until we receive the sync byte
+            bytesRead = serialRead(buffer, 1);
+            // Check for first byte to be 0xA5
+            if (bytesRead > 0) {
+                if ((buffer[0] & 0xFF) == 0xA5) {
                     // Log event to console
-                    logger.debug("Telegram Received: {}", strbuf);
-                    // ############################################
-
-                    // Add received telegram to RxQueue
-                    // telegramQueue.add(temp);
+                    logger.debug("Sync Byte 0xA5 received");
+                    // Copy Sync byte
+                    telegram[0] = buffer[0] & 0xFF;
+                    // Increase counter
+                    rxbytes = 1;
+                }
+            }
+        } else if (rxbytes == 1) {
+            // Read single byte until we receive the sync byte
+            bytesRead = serialRead(buffer, 1);
+            // Check for first byte to be 0xA5
+            if (bytesRead > 0) {
+                if ((buffer[0] & 0xFF) == 0x5A) {
                     // Log event to console
-                    // logger.debug("Element added to Queue. Size is now {}", telegramQueue.size());
-                    // TODO: Maybe add queue later
-
-                    byte senderId[] = { 0, 0, 0, 1 };
-                    long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
-                    HashSet<EltakoTelegramListener> pl = listeners.get(s);
-                    if (pl != null) {
-                        pl.forEach(l -> l.telegramReceived(telegram));
-                    }
+                    logger.debug("Sync Byte 0x5A received");
+                    // Copy Sync byte
+                    telegram[1] = buffer[0] & 0xFF;
+                    // Increase counter
+                    rxbytes = 2;
+                } else if ((buffer[0] & 0xFF) == 0xA5) {
+                    // do nothing. sync byte still valid
+                    // Log event to console
+                    logger.warn(
+                            "Missmatch of Eltako telegram sync byte! This may be an indication for ether bad connection, high bus load or defective device.");
+                } else {
+                    // Log event to console
+                    logger.warn(
+                            "Missmatch of Eltako telegram sync byte! This may be an indication for ether bad connection, high bus load or defective device.");
                     // Reset byte counter
                     rxbytes = 0;
                 }
             }
+        } else {
+            // Read received data (received data length is not guaranteed)
+            bytesRead = serialRead(buffer, 14 - rxbytes);
+            // Data received?
+            if (bytesRead > 0) {
+                // Add serial data to message
+                for (int i = 0; i < bytesRead; i++) {
+                    telegram[i + rxbytes] = buffer[i] & 0xFF;
+                }
+            }
+            // Track how much data has been received
+            rxbytes += bytesRead;
+            // Check if a complete telegram (14 Bytes) has been received
+            if (rxbytes == 14) {
+                // ############################################
+                // Prepare data to be written to log
+                StringBuffer strbuf = new StringBuffer();
+                // Create string out of byte data
+                for (int i = 0; i < 14; i++) {
+                    strbuf.append(String.format("%02X", telegram[i]));
+                }
+                // Log event to console
+                logger.info("Telegram Received: {}", strbuf);
+                // ############################################
+
+                // Add received telegram to RxQueue
+                // telegramQueue.add(temp);
+                // Log event to console
+                // logger.debug("Element added to Queue. Size is now {}", telegramQueue.size());
+                // TODO: Maybe add queue later
+
+                if (waitForGateway == true) {
+                    if (telegram[10] == 0x17) {
+                        int[] message = new int[14];
+                        int[] data = new int[] { 0, 0, 0, 0 };
+                        int[] id = new int[] { 0, 0, 0, 0 };
+                        // Update bridge status
+                        updateStatus(ThingStatus.ONLINE);
+                        // Waiting for FAM14 to respond with status telegram
+                        waitForGateway = false;
+                        // a5 5a ab ff 00 00 00 00 00 00 00 00 00 aa
+                        // Search for FAM14 gateway
+                        constuctMessage(message, 5, 0xFF, data, id, 0x00);
+                        serialWrite(message, 14);
+                    }
+                }
+
+                byte senderId[] = { 0, 0, 0, 1 };
+                long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
+                HashSet<EltakoTelegramListener> pl = listeners.get(s);
+                if (pl != null) {
+                    pl.forEach(l -> l.telegramReceived(telegram));
+                }
+                // Reset byte counter
+                rxbytes = 0;
+            }
         }
+    }
+
+    protected void handlebridgeStatus() {
+
+        ThingStatus status = this.getThing().getStatus();
+
+        // Check for bridge status
+        if ((status == ThingStatus.UNKNOWN) && (waitForGateway == false)) {
+            // Bridge has state UNKOWN right after initialization
+            int[] message = new int[14];
+            int[] data = new int[] { 0, 0, 0, 0 };
+            int[] id = new int[] { 0, 0, 0, 0 };
+            // Force FAM14 gateway into config mode
+            constuctMessage(message, 5, 0xFF, data, id, 0xFF);
+            serialWrite(message, 14);
+            // Search for FAM14 gateway
+            constuctMessage(message, 5, 0xF0, data, id, 0xFF);
+            serialWrite(message, 14);
+            // Wait for response from FAM14 gateway
+            waitForGateway = true;
+        }
+    }
+
+    /**
+     * Thread is executed as soon as the connection to serial interface is established and data can be transmitted
+     */
+    protected Runnable bridgePollingThread = () -> {
+        // Never stop reading data from serial interface unless the bridge should be disposed
+        while (bridgePollingThreadIsNotCanceled) {
+            // Perform actions depending on bridge state
+            handlebridgeStatus();
+            // Receive serial data
+            handleSerialData();
+        }
+        // Log event to console
     };
 
     protected void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {

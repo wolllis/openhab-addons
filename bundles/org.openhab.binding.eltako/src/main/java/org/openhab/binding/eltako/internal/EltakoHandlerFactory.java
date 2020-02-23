@@ -108,10 +108,22 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
     protected void removeHandler(ThingHandler thingHandler) {
         // Log event to console
         logger.debug("Remove handler => {}", thingHandler);
+        // Check if discovery services are available
         if (this.discoveryServiceRegs != null) {
+            // Check if thing has registered discovery services
             ServiceRegistration<?> serviceReg = this.discoveryServiceRegs.get(thingHandler.getThing().getUID());
             if (serviceReg != null) {
+                // Get service handle
+                EltakoDeviceDiscoveryService service = (EltakoDeviceDiscoveryService) bundleContext
+                        .getService(serviceReg.getReference());
+                // Safety check
+                if (service != null) {
+                    // Tell discovery service its bridge will be disposed soon
+                    service.deactivate();
+                }
+                // Unregister discovery service (it will be no longer be available in PaperUI)
                 serviceReg.unregister();
+                // Remove Service
                 discoveryServiceRegs.remove(thingHandler.getThing().getUID());
             }
         } else {
@@ -124,8 +136,11 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
      * This method is called in order to create and register the discovery service handler.
      */
     protected void registerDeviceDiscoveryService(EltakoBridgeHandler handler) {
+        // Create new instance of Eltako Discovery Service
         EltakoDeviceDiscoveryService discoveryService = new EltakoDeviceDiscoveryService(handler);
+        // Tell discovery service it has been added to bridge
         discoveryService.activate();
+        // Register discovery service (it will be available in PaperUI)
         this.discoveryServiceRegs.put(handler.getThing().getUID(), bundleContext
                 .registerService(DiscoveryService.class.getName(), discoveryService, new Hashtable<String, Object>()));
         // Log event to console

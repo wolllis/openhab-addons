@@ -80,21 +80,14 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
 
     // Our own thread pool for the long-running listener job
-    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
+    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> serialPollingJob;
     private Boolean serialPollingThreadIsNotCanceled;
 
     // Queue implementation for telegram handling
     Queue<int[]> telegramQueue = new LinkedList<int[]>();
 
-    // Device discovery service
-    private ScheduledFuture<?> deviceDiscoveryJob;
-    private Boolean DeviceDiscoveryThreadIsNotCanceled;
-
     protected Map<Long, HashSet<EltakoTelegramListener>> listeners;
-
-    EltakoDeviceDiscoveryService DiscoveryService;
-    // EltakoCreateDevice
 
     /**
      * Initializer method
@@ -108,9 +101,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         comportName = null;
         serialPollingThreadIsNotCanceled = null;
         telegramQueue.clear();
-        DeviceDiscoveryThreadIsNotCanceled = null;
         listeners = new HashMap<>();
-        DiscoveryService = null;
     }
 
     /**
@@ -215,18 +206,6 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // Dispose bridge
         super.dispose();
 
-        // Cancel Device Discovery Thread
-        if (deviceDiscoveryJob != null) {
-            logger.debug("Canceling DeviceDiscoveryThread");
-            // SerialPollingJob.cancel(true);
-            DeviceDiscoveryThreadIsNotCanceled = false;
-            while (!deviceDiscoveryJob.isDone()) {
-                ;
-            }
-            deviceDiscoveryJob = null;
-            DeviceDiscoveryThreadIsNotCanceled = null;
-        }
-
         // Cancel SerialPolling Thread
         if (serialPollingJob != null) {
             logger.debug("Canceling SerialPollingThread");
@@ -277,10 +256,6 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
         Collection<ConfigStatusMessage> configStatusMessages = new LinkedList<>();
         return configStatusMessages;
-    }
-
-    public void setDiscoveryService(EltakoDeviceDiscoveryService service) {
-        DiscoveryService = service;
     }
 
     /**
@@ -386,85 +361,6 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         // ############################################
         return rxcount;
     }
-
-    /**
-     * This method is called by the EltakoDeviceDiscoveryService to signal a scan should be started
-     */
-    public void startDiscovery(EltakoDeviceDiscoveryService service) {
-        // Start background thread for discovery of devices
-        deviceDiscoveryJob = scheduledExecutorService.schedule(DeviceDiscoveryThread, 1, TimeUnit.SECONDS);
-        // Set Discovery Thread exit condition
-        DeviceDiscoveryThreadIsNotCanceled = true;
-    }
-
-    /**
-     * This method is called by the EltakoDeviceDiscoveryService to signal a scan should be stopped
-     */
-    public void stopDiscovery() {
-        // Cancel Device Discovery Thread
-        if (deviceDiscoveryJob != null) {
-            logger.debug("Canceling DeviceDiscoveryThread");
-            // SerialPollingJob.cancel(true);
-            DeviceDiscoveryThreadIsNotCanceled = false;
-            while (!deviceDiscoveryJob.isDone()) {
-                ;
-            }
-            deviceDiscoveryJob = null;
-            DeviceDiscoveryThreadIsNotCanceled = null;
-        }
-    }
-
-    /**
-     * Thread is executed for the time devices should be discovered
-     */
-    protected Runnable DeviceDiscoveryThread = () -> {
-        // Log event to console
-        logger.debug("DeviceDiscoveryThread => START");
-
-        // while (DeviceDiscoveryThreadIsNotCanceled) {
-
-        int[] message = new int[14];
-        int[] data = new int[] { 0, 0, 0, 0 };
-        int[] id = new int[] { 0, 0, 0, 0 };
-
-        for (int i = 0; i < 256; i++) {
-            // Check if Thread should end
-            if (!DeviceDiscoveryThreadIsNotCanceled) {
-                break;
-            }
-            // Force FAM14 into config mode
-            if (i == 0) {
-                // - Set FAM14 into config mode (A5 5A AB FF 00 00 00 00 00 00 00 00 FF A9)
-                constuctMessage(message, 5, 0xff, data, id, 0xFF);
-                // Log event to console
-                logger.debug("DiscoveryService: Force FAM14 into config mode");
-            } else if (i == 255) {
-                // Force FAM14 into telegram mode (a5 5a ab ff 00 00 00 00 00 00 00 00 00 aa)
-                constuctMessage(message, 5, 0xff, data, id, 0x00);
-                // Log event to console
-                logger.debug("DiscoveryService: Force FAM14 into telegram mode");
-            } else {
-                // Scan for ID (a5 5a ab f0 00 00 00 00 00 00 00 00 02 9d => ID2)
-                constuctMessage(message, 5, 0xf0, data, id, i);
-                // Log event to console
-                logger.debug("DiscoveryService: Search for device with ID {}", i);
-            }
-            serialWrite(message, 14);
-
-            // Wait some time
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                logger.error("Sleep does not work in DeviceDiscoveryThread: {}", e);
-            }
-        }
-        // }
-        if (DiscoveryService != null) {
-            DiscoveryService.createdevice();
-        }
-        // Log event to console
-        logger.debug("DeviceDiscoveryThread => EXIT");
-    };
 
     /**
      * Thread is executed as soon as the connection to serial interface is established and data can be transmitted

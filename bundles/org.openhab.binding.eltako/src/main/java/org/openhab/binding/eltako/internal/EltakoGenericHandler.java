@@ -30,18 +30,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link EltakoHandler} is responsible for handling commands, which are
+ * The {@link EltakoGenericHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Martin Wenske - Initial contribution
  */
 @NonNullByDefault
-public class EltakoHandler extends BaseThingHandler implements EltakoTelegramListener {
+public class EltakoGenericHandler extends BaseThingHandler implements EltakoTelegramListener {
 
     /*
      * Logger instance to create log entries
      */
-    private final Logger logger = LoggerFactory.getLogger(EltakoHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(EltakoGenericHandler.class);
 
     /**
      * Channel variables
@@ -55,7 +55,7 @@ public class EltakoHandler extends BaseThingHandler implements EltakoTelegramLis
     /**
      * Initializer method
      */
-    public EltakoHandler(Thing thing) {
+    public EltakoGenericHandler(Thing thing) {
         super(thing);
         brightness = PercentType.ZERO;
         speed = DecimalType.ZERO;

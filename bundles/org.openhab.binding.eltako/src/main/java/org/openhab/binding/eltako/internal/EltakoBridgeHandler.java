@@ -447,19 +447,22 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                         updateStatus(ThingStatus.ONLINE);
                         // Waiting for FAM14 to respond with status telegram
                         waitForGateway = false;
-                        // a5 5a ab ff 00 00 00 00 00 00 00 00 00 aa
-                        // Search for FAM14 gateway
+                        // parse message
+                        parseMessage(telegram);
+                        // Set FAM14 back to telegram mode
                         constuctMessage(message, 5, 0xFF, data, id, 0x00);
                         serialWrite(message, 14);
                     }
+                } else {
+                    // Forward telegram to listeners
+                    byte senderId[] = { 0, 0, 0, 1 };
+                    long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
+                    HashSet<EltakoTelegramListener> pl = listeners.get(s);
+                    if (pl != null) {
+                        pl.forEach(l -> l.telegramReceived(telegram));
+                    }
                 }
 
-                byte senderId[] = { 0, 0, 0, 1 };
-                long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
-                HashSet<EltakoTelegramListener> pl = listeners.get(s);
-                if (pl != null) {
-                    pl.forEach(l -> l.telegramReceived(telegram));
-                }
                 // Reset byte counter
                 rxbytes = 0;
             }
@@ -500,6 +503,30 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         }
         // Log event to console
     };
+
+    protected void parseMessage(int[] message) {
+        // Extract information from telegram
+        int sync_byte_1 = message[0];
+        int sync_byte_2 = message[1];
+        int header_ident = message[2] >> 5;
+        int length = message[2] & 0x1F;
+        int org = message[3];
+        int own_id = message[4];
+        int used_ids = message[5];
+        int unknown_1 = message[6];
+        int unknown_2 = message[7];
+        int unknown_3 = message[8];
+        int device_type_number = message[9];
+        int version_number_high = message[10] >> 4;
+        int version_number_low = message[10] & 0x0F;
+        int unknown_4 = message[11];
+        int unknown_5 = message[12];
+        int crc = message[13];
+
+        // Update thing property
+        updateProperty(FAM14_HARDWARE_VERSION, String.format("V%d.%d", version_number_high, version_number_low));
+
+    }
 
     protected void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {
         // Fill message with data

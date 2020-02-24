@@ -8,6 +8,10 @@
     <bridge-type id="bridge">
         <label>Eltako Gateway</label>
         <description>Eltako gateway device which uses serial interface for data transfer</description>
+        <properties>
+            <!-- Properties are shown to the user but can NOT be modified by him -->
+            <property name="Version">Unknown</property>
+        </properties>
         <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description>
             <parameter name="SerialComPort" type="text" required="true">

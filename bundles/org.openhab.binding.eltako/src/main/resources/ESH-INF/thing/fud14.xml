@@ -20,7 +20,7 @@
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
-			<property name="Version">Hardware Version of Device</property>
+			<property name="Version">Unknown</property>
 		</properties>
 		<!-- Represenation-Properties are NOT shown to the user -->
 		<!-- <representation-property>EltakoBusID</representation-property> -->

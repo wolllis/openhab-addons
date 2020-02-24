@@ -52,6 +52,7 @@ public class EltakoBindingConstants {
 
     // Bridge config properties
     public static final String SERIALCOMPORT = "SerialComPort";
+    public static final String FAM14_HARDWARE_VERSION = "Version";
 
     // Bridge config properties
 }

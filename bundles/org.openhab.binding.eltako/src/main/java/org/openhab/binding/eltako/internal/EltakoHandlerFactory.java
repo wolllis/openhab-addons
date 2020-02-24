@@ -93,7 +93,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
         // Create new thing of type FUD14
         if (THING_TYPE_FUD14.equals(thingTypeUID)) {
-            return new EltakoGenericHandler(thing);
+            return new EltakoFud14Handler(thing);
         }
 
         // Log event to console

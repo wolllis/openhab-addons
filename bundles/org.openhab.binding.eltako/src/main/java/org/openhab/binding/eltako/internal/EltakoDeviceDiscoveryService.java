@@ -181,7 +181,7 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         DiscoveryResultBuilder discoveryResultBuilder = DiscoveryResultBuilder.create(thingUID)
                 .withBridge(bridgeHandler.getThing().getUID());
         // Set some thing specific propertys
-        discoveryResultBuilder.withProperty(FUD14_ID, "00000001");
+        discoveryResultBuilder.withProperty(FUD14_DEVICE_ID, "00000001");
         // Add thing to discovery result list
         thingDiscovered(discoveryResultBuilder.build());
     }

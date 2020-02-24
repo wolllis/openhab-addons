@@ -47,8 +47,8 @@ public class EltakoBindingConstants {
     public static final String CHANNEL_BLOCKING = "blocking";
 
     // List of all configuration parameters
-    public static final String FUD14_HARDWARE_VERSION = "Version";
-    public static final String FUD14_ID = "ID";
+    public static final String FUD14_HARDWARE_VERSION = "hardwareVersion";
+    public static final String FUD14_DEVICE_ID = "deviceId";
 
     // Bridge config properties
     public static final String SERIALCOMPORT = "SerialComPort";

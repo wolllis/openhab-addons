@@ -3,14 +3,12 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-
-	<!-- Eltako Thing Types -->
 	<thing-type id="FUD14">
         <supported-bridge-type-refs>
             <bridge-type-ref id="bridge" />
         </supported-bridge-type-refs>
 		<label>FUD14</label>
-		<description>Universal Dimming Actor, Power MOSFET up to 400W</description>
+		<description>Universal-Dimmschalter, Power MOSFET bis 400 W</description>
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
             <channel id="brightness" typeId="system.brightness" />
@@ -20,15 +18,13 @@
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
-			<property name="Version">Unknown</property>
+			<property name="hardwareVersion">Unknown</property>
 		</properties>
-		<!-- Represenation-Properties are NOT shown to the user -->
-		<!-- <representation-property>EltakoBusID</representation-property> -->
-        <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description>
-            <parameter name="ID" type="text" pattern="([0-9A-Fa-f]{8})" required="true">
+            <!-- Config which is needed to create the thing -->
+            <parameter name="deviceId" type="text" pattern="([0-9A-Fa-f]{8})" required="true">
                 <label>Device Identification</label>
-                <description>Needs to match the ID of the device you want to control</description>
+                <description>Needs to match the taught in device ID</description>
             </parameter>
         </config-description>
 	</thing-type>

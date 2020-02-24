@@ -61,7 +61,7 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
     public void initialize() {
 
         // Acquire device ID from thing configuration (set by the user)
-        this.deviceId = Integer.parseInt(getThing().getConfiguration().get(FUD14_ID).toString(), 16);
+        this.deviceId = Integer.parseInt(getThing().getConfiguration().get(FUD14_DEVICE_ID).toString(), 16);
         // Update thing property
         updateProperty(FUD14_HARDWARE_VERSION, "Unknown");
 

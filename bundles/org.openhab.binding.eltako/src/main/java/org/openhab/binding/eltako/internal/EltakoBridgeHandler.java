@@ -429,7 +429,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                     strbuf.append(String.format("%02X", telegram[i]));
                 }
                 // Log event to console
-                logger.info("Telegram Received: {}", strbuf);
+                logger.debug("Telegram Received: {}", strbuf);
                 // ############################################
 
                 // Add received telegram to RxQueue

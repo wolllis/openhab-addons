@@ -363,7 +363,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     int rxbytes = 0;
 
-    protected void handleSerialData() {
+    protected void processSerialData() {
         byte[] buffer = new byte[14];
         int[] telegram = new int[14];
         int bytesRead;
@@ -496,7 +496,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             // Perform actions depending on bridge state
             handlebridgeStatus();
             // Receive serial data
-            handleSerialData();
+            processSerialData();
         }
         // Log event to console
     };

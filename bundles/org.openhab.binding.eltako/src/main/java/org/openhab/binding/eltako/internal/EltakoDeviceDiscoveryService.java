@@ -15,10 +15,6 @@ package org.openhab.binding.eltako.internal;
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
@@ -38,16 +34,14 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(EltakoDeviceDiscoveryService.class);
 
     private EltakoBridgeHandler bridgeHandler;
-    private ScheduledFuture<?> deviceDiscoveryJob;
     private Boolean DeviceDiscoveryThreadIsNotCanceled;
-
-    // Our own thread pool for the long-running listener job
-    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    private Boolean DeviceDiscoveryThreadDone;
 
     public EltakoDeviceDiscoveryService(EltakoBridgeHandler bridgeHandler) {
-        super(null, 60, false);
+        super(null, 30, false);
         this.bridgeHandler = bridgeHandler;
         DeviceDiscoveryThreadIsNotCanceled = false;
+        DeviceDiscoveryThreadDone = true;
     }
 
     /**
@@ -61,70 +55,27 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     @Override
     public void deactivate() {
         super.deactivate();
+        // Log event to console
         logger.debug("Deaktivate Device Discovery Service");
-
-        // Cancel Device Discovery Thread
-        if (deviceDiscoveryJob != null) {
-            logger.debug("Canceling DeviceDiscoveryThread");
-            // SerialPollingJob.cancel(true);
-            DeviceDiscoveryThreadIsNotCanceled = false;
-            while (!deviceDiscoveryJob.isDone()) {
-                ;
-            }
-            deviceDiscoveryJob = null;
-            DeviceDiscoveryThreadIsNotCanceled = null;
+        // Stopping scan
+        DeviceDiscoveryThreadIsNotCanceled = false;
+        // Wait for scan to be stopped
+        while (!DeviceDiscoveryThreadDone) {
+            ;
         }
     }
 
     /**
-     * Device scan should be started => Inform bridge about it
+     * This method is called by the framework within a new thread. Scan for new devices.
      */
     @Override
     protected void startScan() {
+        // Log event to console
         logger.debug("Starting Eltako discovery scan");
-
-        // Start background thread for discovery of devices
-        deviceDiscoveryJob = scheduledExecutorService.schedule(DeviceDiscoveryThread, 1, TimeUnit.SECONDS);
+        // Signal scan is running
+        DeviceDiscoveryThreadDone = false;
         // Set Discovery Thread exit condition
         DeviceDiscoveryThreadIsNotCanceled = true;
-    }
-
-    /**
-     * Device scan should be stopped => Inform bridge about it
-     */
-    @Override
-    public synchronized void stopScan() {
-        super.stopScan();
-        logger.debug("Stopping Eltako discovery scan");
-
-        // Cancel Device Discovery Thread
-        if (deviceDiscoveryJob != null) {
-            logger.debug("Canceling DeviceDiscoveryThread");
-            // SerialPollingJob.cancel(true);
-            DeviceDiscoveryThreadIsNotCanceled = false;
-            while (!deviceDiscoveryJob.isDone()) {
-                ;
-            }
-            deviceDiscoveryJob = null;
-            DeviceDiscoveryThreadIsNotCanceled = null;
-        }
-    }
-
-    /**
-     * Called by framework in order to get supported thing types
-     */
-    @Override
-    public Set<@NonNull ThingTypeUID> getSupportedThingTypes() {
-        logger.debug("Get supported thing types");
-        return SUPPORTED_DEVICE_THING_TYPES_UIDS;
-    }
-
-    /**
-     * Thread is executed for the time devices should be discovered
-     */
-    protected Runnable DeviceDiscoveryThread = () -> {
-        // Log event to console
-        logger.debug("DeviceDiscoveryThread started");
 
         // Create example device
         this.createdevice();
@@ -169,9 +120,36 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
                 logger.error("Sleep does not work in DeviceDiscoveryThread: {}", e);
             }
         }
+        // Signal scan has been stopped
+        DeviceDiscoveryThreadDone = true;
         // Log event to console
         logger.debug("DeviceDiscoveryThread ended");
-    };
+    }
+
+    /**
+     * Device scan should be stopped
+     */
+    @Override
+    public synchronized void stopScan() {
+        super.stopScan();
+        // Log event to console
+        logger.debug("Stopping Eltako discovery scan");
+        // Stopping scan
+        DeviceDiscoveryThreadIsNotCanceled = false;
+        // Wait for scan to be stopped
+        while (!DeviceDiscoveryThreadDone) {
+            ;
+        }
+    }
+
+    /**
+     * Called by framework in order to get supported thing types
+     */
+    @Override
+    public Set<@NonNull ThingTypeUID> getSupportedThingTypes() {
+        logger.debug("Get supported thing types");
+        return SUPPORTED_DEVICE_THING_TYPES_UIDS;
+    }
 
     public void createdevice() {
         // Create instance of new thing including needed property's

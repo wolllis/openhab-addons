@@ -83,17 +83,22 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
         // Log event to console
         logger.debug("Create new handler => {}", thingTypeUID);
 
-        // Create new thing of type bridge using serialPortManager instance
-        // Register device discovery service
         if (THING_TYPE_FAM14.equals(thingTypeUID)) {
+            // Create new thing of type bridge using serialPortManager instance
             EltakoBridgeHandler bridgeHandler = new EltakoBridgeHandler((Bridge) thing, serialPortManager);
+            // Register device discovery service
             registerDeviceDiscoveryService(bridgeHandler);
             return bridgeHandler;
         }
 
-        // Create new thing of type FUD14
         if (THING_TYPE_FUD14.equals(thingTypeUID)) {
+            // Create new thing of type FUD14
             return new EltakoFud14Handler(thing);
+        }
+
+        if (THING_TYPE_FSB14.equals(thingTypeUID)) {
+            // Create new thing of type FSB14
+            return new EltakoFsb14Handler(thing);
         }
 
         // Log event to console

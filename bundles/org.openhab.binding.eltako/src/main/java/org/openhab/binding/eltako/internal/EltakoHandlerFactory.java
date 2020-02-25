@@ -85,7 +85,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
         // Create new thing of type bridge using serialPortManager instance
         // Register device discovery service
-        if (THING_TYPE_BRIDGE.equals(thingTypeUID)) {
+        if (THING_TYPE_FAM14.equals(thingTypeUID)) {
             EltakoBridgeHandler bridgeHandler = new EltakoBridgeHandler((Bridge) thing, serialPortManager);
             registerDeviceDiscoveryService(bridgeHandler);
             return bridgeHandler;

@@ -3,11 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-	
-	<!-- Eltako Bridge -->
-    <bridge-type id="bridge">
-        <label>Eltako Gateway</label>
-        <description>Eltako gateway device which uses serial interface for data transfer</description>
+    <bridge-type id="FAM14">
+        <label>FAM14</label>
+        <description>Funk-Antennenmodul für den Eltako-RS485-Bus mit austauschbarer Antenne. Mit integriertem Schaltnetzteil 12 V DC/8 W. Bidirektional.</description>
         <properties>
             <!-- Properties are shown to the user but can NOT be modified by him -->
             <property name="Version">Unknown</property>

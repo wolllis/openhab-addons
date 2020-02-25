@@ -61,7 +61,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
      */
     private Logger logger = LoggerFactory.getLogger(EltakoBridgeHandler.class);
 
-    public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<>(Arrays.asList(THING_TYPE_BRIDGE));
+    public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<>(Arrays.asList(THING_TYPE_FAM14));
 
     /*
      * Instance of serialPortManager

@@ -32,7 +32,7 @@ public class EltakoBindingConstants {
     public static final String BINDING_ID = "eltako";
 
     // bridge
-    public final static ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
+    public final static ThingTypeUID THING_TYPE_FAM14 = new ThingTypeUID(BINDING_ID, "FAM14");
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_DSZ14DRS = new ThingTypeUID(BINDING_ID, "DSZ14DRS");

@@ -38,20 +38,23 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     private Boolean DeviceDiscoveryThreadDone;
 
     public EltakoDeviceDiscoveryService(EltakoBridgeHandler bridgeHandler) {
-        super(null, 30, false);
+        super(null, 40, false);
         this.bridgeHandler = bridgeHandler;
         DeviceDiscoveryThreadIsNotCanceled = false;
         DeviceDiscoveryThreadDone = true;
     }
 
     /**
-     * Called on component activation.
+     * Device Discovery Service has been added to a bridge.
      */
     public void activate() {
         super.activate(null);
         logger.debug("Aktivate Device Discovery Service");
     }
 
+    /**
+     * Device Discovery Service has been removed from a bridge = Stop any active scan.
+     */
     @Override
     public void deactivate() {
         super.deactivate();
@@ -66,7 +69,7 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     }
 
     /**
-     * This method is called by the framework within a new thread. Scan for new devices.
+     * Scan for new devices. This method is called by the framework within a new thread.
      */
     @Override
     protected void startScan() {
@@ -151,6 +154,9 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         return SUPPORTED_DEVICE_THING_TYPES_UIDS;
     }
 
+    /**
+     * Add a discovered device to list of found devices
+     */
     public void createdevice() {
         // Create instance of new thing including needed property's
         ThingTypeUID thingTypeUID = new ThingTypeUID(BINDING_ID, "FUD14");

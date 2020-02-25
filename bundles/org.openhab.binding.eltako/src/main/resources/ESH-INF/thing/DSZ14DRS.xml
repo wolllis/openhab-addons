@@ -5,7 +5,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 	<thing-type id="DSZ14DRS">
         <supported-bridge-type-refs>
-            <bridge-type-ref id="bridge" />
+            <bridge-type-ref id="FAM14" />
         </supported-bridge-type-refs>
 		<label>DSZ14DRS</label>
 		<description>RS485-Bus-Funk-Drehstromzähler. Maximalstrom 3x80 A.</description>

@@ -5,7 +5,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 	<thing-type id="FFR14">
         <supported-bridge-type-refs>
-            <bridge-type-ref id="bridge" />
+            <bridge-type-ref id="FAM14" />
         </supported-bridge-type-refs>
 		<label>FFR14</label>
 		<description>Feldfreischalter mit 2 Kanälen, 1+1 Schließer potenzialfrei 16 A/250 V AC</description>

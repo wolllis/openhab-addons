@@ -5,7 +5,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 	<thing-type id="F4HK14">
         <supported-bridge-type-refs>
-            <bridge-type-ref id="bridge" />
+            <bridge-type-ref id="FAM14" />
         </supported-bridge-type-refs>
 		<label>F4HK14</label>
 		<description>Heiz-Kühl-Relais mit 4 Kanälen, je 1 Schließer 4 A/250 V AC, potenzialgetrennt von der Versorgungsspannung</description>

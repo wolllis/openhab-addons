@@ -156,7 +156,7 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
             strbuf.append(String.format("%02X ", packet[i]));
         }
         // Log event to console
-        logger.debug("FUD14: Telegram Received: {}", strbuf);
+        logger.trace("GENERIC: Telegram Received: {}", strbuf);
 
         if ((packet[11] | (packet[10] << 8) | (packet[9] << 16)) == (deviceId & 0xFFFFFF)) {
             updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));

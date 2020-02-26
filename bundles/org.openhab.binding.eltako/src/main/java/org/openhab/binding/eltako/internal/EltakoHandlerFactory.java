@@ -102,7 +102,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
         }
 
         // Log event to console
-        logger.debug("Thing handler could be created because type is not supported => {}", thingTypeUID);
+        logger.warn("Type is not supported => {}", thingTypeUID);
         return null;
     }
 

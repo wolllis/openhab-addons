@@ -300,7 +300,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             strbuf.append(String.format("%02X ", message[i]));
         }
         // Log event to console
-        logger.debug("Serial Write: {}", strbuf);
+        logger.trace("Serial Write: {}", strbuf);
         // ############################################
         byte[] buffer = new byte[length];
         for (int i = 0; i < length; i++) {
@@ -355,7 +355,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                 strbuf.append(String.format("%02X ", buffer[i] & 0xFF));
             }
             // Log event to console
-            logger.debug("Serial Read: {}", strbuf);
+            logger.trace("Serial Read: {}", strbuf);
         }
         // ############################################
         return rxcount;
@@ -375,7 +375,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             if (bytesRead > 0) {
                 if ((buffer[0] & 0xFF) == 0xA5) {
                     // Log event to console
-                    logger.debug("Sync Byte 0xA5 received");
+                    logger.trace("Sync Byte 0xA5 received");
                     // Copy Sync byte
                     telegram[0] = buffer[0] & 0xFF;
                     // Increase counter
@@ -389,7 +389,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             if (bytesRead > 0) {
                 if ((buffer[0] & 0xFF) == 0x5A) {
                     // Log event to console
-                    logger.debug("Sync Byte 0x5A received");
+                    logger.trace("Sync Byte 0x5A received");
                     // Copy Sync byte
                     telegram[1] = buffer[0] & 0xFF;
                     // Increase counter
@@ -429,7 +429,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                     strbuf.append(String.format("%02X", telegram[i]));
                 }
                 // Log event to console
-                logger.debug("Telegram Received: {}", strbuf);
+                logger.trace("Telegram Received: {}", strbuf);
                 // ############################################
 
                 // Add received telegram to RxQueue

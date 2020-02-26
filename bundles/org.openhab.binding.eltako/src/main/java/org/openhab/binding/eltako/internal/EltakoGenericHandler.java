@@ -61,9 +61,9 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
     public void initialize() {
 
         // Acquire device ID from thing configuration (set by the user)
-        this.deviceId = Integer.parseInt(getThing().getConfiguration().get(FUD14_DEVICE_ID).toString(), 16);
+        // this.deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString(), 16);
         // Update thing property
-        updateProperty(FUD14_HARDWARE_VERSION, "Unknown");
+        updateProperty(GENERIC_HARDWARE_VERSION, "Unknown");
 
         // Set thing status to UNKNOWN
         this.updateStatus(ThingStatus.UNKNOWN);
@@ -71,7 +71,8 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
         EltakoBridgeHandler bridgeHandle = this.getMyBridgeHandle();
         if (bridgeHandle != null) {
             // Listen for a specific ID so received telegrams are forwarded to thing (Ignore 4th byte)
-            bridgeHandle.addPacketListener(this, deviceId & 0xFFFFFF);
+            bridgeHandle.addPacketListener(this,
+                    Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString()) & 0xFFFFFF);
             // Set thing status depending on status of bridge
             Thing bridge = this.getMyBridge();
             if (bridge != null) {

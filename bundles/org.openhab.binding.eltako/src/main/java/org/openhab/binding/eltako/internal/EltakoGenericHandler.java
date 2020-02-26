@@ -16,8 +16,6 @@ import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.library.types.DecimalType;
-import org.eclipse.smarthome.core.library.types.PercentType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -160,8 +158,8 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
         logger.trace("GENERIC: Telegram Received: {}", strbuf);
 
         if ((packet[11] | (packet[10] << 8) | (packet[9] << 16)) == (deviceId & 0xFFFFFF)) {
-            updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
-            updateState(CHANNEL_SPEED, DecimalType.valueOf(String.valueOf(packet[6])));
+            // updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
+            // updateState(CHANNEL_SPEED, DecimalType.valueOf(String.valueOf(packet[6])));
             // updateState(CHANNEL_POWER, OnOffType.from(Integer.packet[7])));
             // updateState(CHANNEL_BLOCKING, OnOffType.from(Integer.packet[7])));
         }

@@ -592,7 +592,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     /**
      * Add new listener to receiver queue
-     * 
+     *
      * @param listener
      * @param senderIdToListenTo
      */
@@ -604,7 +604,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     /**
      * Remove listener from receiver queue
-     * 
+     *
      * @param listener
      * @param senderIdToListenTo
      */

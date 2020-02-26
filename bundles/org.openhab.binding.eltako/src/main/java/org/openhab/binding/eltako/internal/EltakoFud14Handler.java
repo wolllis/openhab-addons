@@ -44,7 +44,6 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
     private DecimalType speed;
     private OnOffType power;
     private OnOffType blocking;
-    private int deviceId;
 
     public EltakoFud14Handler(Thing thing) {
         super(thing);
@@ -166,11 +165,12 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
         }
 
         // Convert Device ID from int into 4 bytes
+        int deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString());
         int[] ID = new int[4];
         ID[0] = deviceId & 0xFF;
         ID[1] = (deviceId >> 8) & 0xFF;
         ID[2] = (deviceId >> 16) & 0xFF;
-        ID[3] = (deviceId >> 24) & 0xFF;
+        ID[3] = 0x03;
 
         // Calculate CRC value
         int crc = (0x0B + 0x07 + 0x02 + value_brightness + value_speed + value_power + ID[3] + ID[2] + ID[1] + ID[0])

@@ -69,12 +69,18 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     private SerialPortManager serialPortManager;
 
     /*
+     * Holds instance of Device Discovery Service
+     */
+    private EltakoDeviceDiscoveryService discoveryService;
+
+    /*
      * Variables related to serial data handling
      */
     private SerialPort serialPort;
     private String comportName;
-    protected InputStream inputStream;
-    protected OutputStream outputStream;
+    private InputStream inputStream;
+    private OutputStream outputStream;
+    private int rxbytes;
 
     /* TODO: Make this configurable in Bridge config */
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
@@ -83,12 +89,12 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> bridgePollingJob;
     private Boolean bridgePollingThreadIsNotCanceled;
-    protected Boolean waitForGateway;
+    private Boolean waitForGateway;
 
     // Queue implementation for telegram handling
     Queue<int[]> telegramQueue = new LinkedList<int[]>();
 
-    protected Map<Long, HashSet<EltakoTelegramListener>> listeners;
+    private Map<Long, HashSet<EltakoTelegramListener>> listeners;
 
     /**
      * Initializer method
@@ -104,6 +110,8 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         telegramQueue.clear();
         listeners = new HashMap<>();
         waitForGateway = false;
+        discoveryService = null;
+        rxbytes = 0;
     }
 
     /**
@@ -258,6 +266,15 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     }
 
     /**
+     * Sets the handle instance of the used Discovery Service.
+     *
+     * @param handle
+     */
+    public void setServiceHandle(EltakoDeviceDiscoveryService handle) {
+        discoveryService = handle;
+    }
+
+    /**
      * Event handler is called in case a channel has received a command
      */
     @Override
@@ -320,7 +337,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     /**
      * Read data from serial interface
      */
-    protected int serialRead(byte[] buffer, int length) {
+    private int serialRead(byte[] buffer, int length) {
 
         int rxcount = 0;
 
@@ -361,9 +378,10 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         return rxcount;
     }
 
-    int rxbytes = 0;
-
-    protected void processSerialData() {
+    /**
+     * Check if serial data is available. Check for sync bytes. Forward telegrams to registered listeners.
+     */
+    private void processSerialData() {
         byte[] buffer = new byte[14];
         int[] telegram = new int[14];
         int bytesRead;
@@ -461,6 +479,8 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                     if (pl != null) {
                         pl.forEach(l -> l.telegramReceived(telegram));
                     }
+                    // Forward telegram to Device Discovery Service
+                    discoveryService.telegramReceived(telegram);
                 }
 
                 // Reset byte counter
@@ -469,7 +489,10 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         }
     }
 
-    protected void handlebridgeStatus() {
+    /**
+     * Check for bridge status
+     */
+    private void handlebridgeStatus() {
 
         ThingStatus status = this.getThing().getStatus();
 
@@ -491,9 +514,9 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     }
 
     /**
-     * Thread is executed as soon as the connection to serial interface is established and data can be transmitted
+     * Serves as the main polling thread for a couple of independent actions
      */
-    protected Runnable bridgePollingThread = () -> {
+    private Runnable bridgePollingThread = () -> {
         // Never stop reading data from serial interface unless the bridge should be disposed
         while (bridgePollingThreadIsNotCanceled) {
             // Perform actions depending on bridge state
@@ -501,10 +524,14 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
             // Receive serial data
             processSerialData();
         }
-        // Log event to console
     };
 
-    protected void parseMessage(int[] message) {
+    /**
+     * Parse a received telegram and extract some usefull information
+     *
+     * @param message
+     */
+    private void parseMessage(int[] message) {
         // Extract information from telegram
         // int sync_byte_1 = message[0];
         // int sync_byte_2 = message[1];
@@ -528,6 +555,16 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
+    /**
+     * Create a message to be send out over serial interface
+     *
+     * @param message
+     * @param header_ident
+     * @param org
+     * @param data
+     * @param id
+     * @param status
+     */
     protected void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {
         // Fill message with data
         message[0] = 0xA5;
@@ -553,12 +590,24 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
         message[13] = message[13] % 256;
     }
 
+    /**
+     * Add new listener to receiver queue
+     * 
+     * @param listener
+     * @param senderIdToListenTo
+     */
     public void addPacketListener(EltakoTelegramListener listener, long senderIdToListenTo) {
         if (listeners.computeIfAbsent(senderIdToListenTo, k -> new HashSet<>()).add(listener)) {
             logger.debug("Listener {} added with ID {}", listener, senderIdToListenTo);
         }
     }
 
+    /**
+     * Remove listener from receiver queue
+     * 
+     * @param listener
+     * @param senderIdToListenTo
+     */
     public void removePacketListener(EltakoTelegramListener listener, long senderIdToListenTo) {
         HashSet<EltakoTelegramListener> pl = listeners.get(senderIdToListenTo);
         if (pl != null) {

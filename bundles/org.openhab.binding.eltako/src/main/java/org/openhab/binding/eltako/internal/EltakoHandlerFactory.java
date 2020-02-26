@@ -56,6 +56,9 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
     private Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
 
+    /*
+     * Reference of serialPortManager used to open serial interface and send/receive data
+     */
     @Reference
     SerialPortManager serialPortManager;
 
@@ -87,7 +90,10 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
             // Create new thing of type bridge using serialPortManager instance
             EltakoBridgeHandler bridgeHandler = new EltakoBridgeHandler((Bridge) thing, serialPortManager);
             // Register device discovery service
-            registerDeviceDiscoveryService(bridgeHandler);
+            EltakoDeviceDiscoveryService service = registerDeviceDiscoveryService(bridgeHandler);
+            // Pass service handle to bridge
+            bridgeHandler.setServiceHandle(service);
+            // Return
             return bridgeHandler;
         }
 
@@ -140,7 +146,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
     /**
      * This method is called in order to create and register the discovery service handler.
      */
-    protected void registerDeviceDiscoveryService(EltakoBridgeHandler handler) {
+    private EltakoDeviceDiscoveryService registerDeviceDiscoveryService(EltakoBridgeHandler handler) {
         // Create new instance of Eltako Discovery Service
         EltakoDeviceDiscoveryService discoveryService = new EltakoDeviceDiscoveryService(handler);
         // Tell discovery service it has been added to bridge
@@ -150,5 +156,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
                 .registerService(DiscoveryService.class.getName(), discoveryService, new Hashtable<String, Object>()));
         // Log event to console
         logger.debug("Discovery service {} has been registered", discoveryService);
+        // Return
+        return discoveryService;
     }
 }

@@ -33,6 +33,9 @@ import org.slf4j.LoggerFactory;
 public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(EltakoDeviceDiscoveryService.class);
 
+    /*
+     * Some local variables
+     */
     private EltakoBridgeHandler bridgeHandler;
     private Boolean DeviceDiscoveryThreadIsNotCanceled;
     private Boolean DeviceDiscoveryThreadDone;
@@ -73,19 +76,16 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
      */
     @Override
     protected void startScan() {
+        int[] message = new int[14];
+        int[] data = new int[] { 0, 0, 0, 0 };
+        int[] id = new int[] { 0, 0, 0, 0 };
+
         // Log event to console
         logger.debug("Starting Eltako discovery scan");
         // Signal scan is running
         DeviceDiscoveryThreadDone = false;
         // Set Discovery Thread exit condition
         DeviceDiscoveryThreadIsNotCanceled = true;
-
-        // Create example device
-        this.createdevice();
-
-        int[] message = new int[14];
-        int[] data = new int[] { 0, 0, 0, 0 };
-        int[] id = new int[] { 0, 0, 0, 0 };
 
         for (int i = 0; i < 256; i++) {
             // Check if Thread should end
@@ -97,26 +97,26 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
                 logger.debug("Bridge instance not available => end scan");
                 break;
             }
-            // Force FAM14 into config mode
             if (i == 0) {
-                // - Set FAM14 into config mode (A5 5A AB FF 00 00 00 00 00 00 00 00 FF A9)
+                // Force FAM14 into config mode
                 this.bridgeHandler.constuctMessage(message, 5, 0xff, data, id, 0xFF);
                 // Log event to console
                 logger.debug("DiscoveryService: Force FAM14 into config mode");
             } else if (i == 255) {
-                // Force FAM14 into telegram mode (a5 5a ab ff 00 00 00 00 00 00 00 00 00 aa)
+                // Force FAM14 into telegram mode
                 this.bridgeHandler.constuctMessage(message, 5, 0xff, data, id, 0x00);
                 // Log event to console
                 logger.debug("DiscoveryService: Force FAM14 into telegram mode");
             } else {
-                // Scan for ID (a5 5a ab f0 00 00 00 00 00 00 00 00 02 9d => ID2)
+                // Search for ID
                 this.bridgeHandler.constuctMessage(message, 5, 0xf0, data, id, i);
                 // Log event to console
                 logger.debug("DiscoveryService: Search for device with ID {}", i);
             }
+            // Send telegram using bridge
             this.bridgeHandler.serialWrite(message, 14);
 
-            // Wait some time
+            // Wait some time to ease the CPU
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -133,7 +133,7 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
      * Device scan should be stopped
      */
     @Override
-    public synchronized void stopScan() {
+    public void stopScan() {
         super.stopScan();
         // Log event to console
         logger.debug("Stopping Eltako discovery scan");
@@ -155,17 +155,52 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     }
 
     /**
+     * Called by Bridge when a new telegram has been received
+     */
+    public void telegramReceived(int[] packet) {
+        // Check if the scan is active
+        if (DeviceDiscoveryThreadDone == true) {
+            return;
+        }
+        // ###########################################################
+        // Prepare data to be written to log
+        StringBuffer strbuf = new StringBuffer();
+        // Create string out of byte data
+        for (int i = 0; i < 14; i++) {
+            strbuf.append(String.format("%02X ", packet[i]));
+        }
+        // Log event to console
+        logger.trace("DeviceDiscovery: Telegram Received: {}", strbuf);
+        // ###########################################################
+        // Create new device
+        createdevice(packet[9], packet[4]);
+    }
+
+    /**
      * Add a discovered device to list of found devices
      */
-    public void createdevice() {
-        // Create instance of new thing including needed property's
-        ThingTypeUID thingTypeUID = new ThingTypeUID(BINDING_ID, "FUD14");
-        ThingUID thingUID = new ThingUID(thingTypeUID, bridgeHandler.getThing().getUID(), "00000001");
+    public void createdevice(int modelId, int deviceId) {
+        ThingTypeUID thingTypeUID;
+        // Create instance of new thing depending on modelId received
+        switch (modelId) {
+            case 4:
+                thingTypeUID = new ThingTypeUID(BINDING_ID, "FUD14");
+                break;
+            case 6:
+                thingTypeUID = new ThingTypeUID(BINDING_ID, "FSB14");
+                break;
+            default:
+                return;
+        }
+        logger.debug("Created Device: modelId = {} deviceId = {}", modelId, deviceId);
+        // Get new Thing UID
+        ThingUID thingUID = new ThingUID(thingTypeUID, bridgeHandler.getThing().getUID(),
+                String.format("%08d", deviceId));
         // Create result (thing)
         DiscoveryResultBuilder discoveryResultBuilder = DiscoveryResultBuilder.create(thingUID)
                 .withBridge(bridgeHandler.getThing().getUID());
-        // Set some thing specific propertys
-        discoveryResultBuilder.withProperty(FUD14_DEVICE_ID, "00000001");
+        // Add Device ID as a property
+        discoveryResultBuilder.withProperty(GENERIC_DEVICE_ID, String.format("%08d", deviceId));
         // Add thing to discovery result list
         thingDiscovered(discoveryResultBuilder.build());
     }

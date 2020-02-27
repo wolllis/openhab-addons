@@ -59,7 +59,7 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         // Log event to console
-        logger.debug("Channel {} received command {} with class {}", channelUID, command, command.getClass());
+        logger.trace("Channel {} received command {} with class {}", channelUID, command, command.getClass());
         // Get bridge instance
         Thing bridge = this.getMyBridge();
         // Check for valid bridge instance
@@ -184,6 +184,37 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
         if (this.getThing().getStatus() == ThingStatus.ONLINE) {
             // Write data by calling bridge handler method
             bridgehandler.serialWrite(data, 14);
+        }
+    }
+
+    /**
+     * Called by Bridge when a new telegram has been received
+     */
+    @Override
+    public void telegramReceived(int[] packet) {
+        // Convert Device ID from int into 4 bytes
+        int deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString());
+
+        // Check for HEADER == 0x04 and ORG == 0x07 and COMMAND == 0x02
+        if ((packet[2] >> 5 == 0x04) && (packet[3] == 0x07) && (packet[4] == 0x02)) {
+            // Check for ID (ignore 4th byte)
+            if ((packet[11] | (packet[10] << 8) | (packet[9] << 16)) == (deviceId)) {
+
+                // ####################################################
+                // Prepare data to be written to log
+                StringBuffer strbuf = new StringBuffer();
+                // Create string out of byte data
+                for (int i = 0; i < 14; i++) {
+                    strbuf.append(String.format("%02X ", packet[i]));
+                }
+                // Log event to console
+                logger.trace("FUD14: Telegram Received: {}", strbuf);
+                // ####################################################
+
+                // Update channel state based on received data
+                updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
+                updateState(CHANNEL_POWER, OnOffType.valueOf(String.valueOf(packet[7] & 0x09)));
+            }
         }
     }
 }

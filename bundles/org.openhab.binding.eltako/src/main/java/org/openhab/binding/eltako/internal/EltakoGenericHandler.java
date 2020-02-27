@@ -144,32 +144,17 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
     }
 
     /**
-     * Called by Bridge when a new telegram has been received
-     */
-    @Override
-    public void telegramReceived(int[] packet) {
-        // Prepare data to be written to log
-        StringBuffer strbuf = new StringBuffer();
-        // Create string out of byte data
-        for (int i = 0; i < 14; i++) {
-            strbuf.append(String.format("%02X ", packet[i]));
-        }
-        // Log event to console
-        logger.trace("GENERIC: Telegram Received: {}", strbuf);
-
-        if ((packet[11] | (packet[10] << 8) | (packet[9] << 16)) == (deviceId & 0xFFFFFF)) {
-            // updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
-            // updateState(CHANNEL_SPEED, DecimalType.valueOf(String.valueOf(packet[6])));
-            // updateState(CHANNEL_POWER, OnOffType.from(Integer.packet[7])));
-            // updateState(CHANNEL_BLOCKING, OnOffType.from(Integer.packet[7])));
-        }
-    }
-
-    /**
      * Event handler is called in case a channel has received a command
      */
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+    }
+
+    /**
+     * Called by Bridge when a new telegram has been received
+     */
+    @Override
+    public void telegramReceived(int[] packet) {
     }
 
     /**

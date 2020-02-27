@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.eltako.internal;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+import static org.openhab.binding.eltako.internal.EltakoBindingConstants.GENERIC_DEVICE_ID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -61,7 +61,7 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
         // Acquire device ID from thing configuration (set by the user)
         // this.deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString(), 16);
         // Update thing property
-        updateProperty(GENERIC_HARDWARE_VERSION, "Unknown");
+        // updateProperty(GENERIC_HARDWARE_VERSION, "Unknown");
 
         // Set thing status to UNKNOWN
         this.updateStatus(ThingStatus.UNKNOWN);

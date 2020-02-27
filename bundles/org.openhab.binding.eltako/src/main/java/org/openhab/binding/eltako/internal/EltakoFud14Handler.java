@@ -182,6 +182,18 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
 
         // Get own state
         if (this.getThing().getStatus() == ThingStatus.ONLINE) {
+
+            // ####################################################
+            // Prepare data to be written to log
+            StringBuffer strbuf = new StringBuffer();
+            // Create string out of byte data
+            for (int i = 0; i < 14; i++) {
+                strbuf.append(String.format("%02X ", data[i]));
+            }
+            // Log event to console
+            logger.trace("FUD14: Telegram Send: {}", strbuf);
+            // ####################################################
+
             // Write data by calling bridge handler method
             bridgehandler.serialWrite(data, 14);
         }
@@ -213,7 +225,7 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
 
                 // Update channel state based on received data
                 updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
-                updateState(CHANNEL_POWER, OnOffType.valueOf(String.valueOf(packet[7] & 0x09)));
+                // updateState(CHANNEL_POWER, OnOffType.valueOf(String.valueOf(packet[7] & 0x09)));
             }
         }
     }

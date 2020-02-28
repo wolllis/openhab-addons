@@ -82,7 +82,6 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
                     this.updateStatus(ThingStatus.ONLINE);
                     // TODO: Check communication to thing first before setting it to ONLINE
                 }
-
             }
         }
 

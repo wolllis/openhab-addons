@@ -47,10 +47,6 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
 
     public EltakoFud14Handler(Thing thing) {
         super(thing);
-        brightness = PercentType.ZERO;
-        speed = DecimalType.ZERO;
-        power = OnOffType.OFF;
-        blocking = OnOffType.OFF;
     }
 
     /**
@@ -60,89 +56,79 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         // Log event to console
         logger.trace("Channel {} received command {} with class {}", channelUID, command, command.getClass());
+
         // Get bridge instance
-        Thing bridge = this.getMyBridge();
-        // Check for valid bridge instance
-        if (bridge != null) {
-            // Get bridge handler instance
-            EltakoBridgeHandler bridgehandler = getMyBridgeHandle();
-            // Check for valid bridge handler instance
-            if (bridgehandler != null) {
-                switch (channelUID.getId()) {
-                    case CHANNEL_BRIGHTNESS:
-                        if (command instanceof PercentType) {
-                            brightness = (PercentType) command;
-                            // updateState(CHANNEL_BRIGHTNESS, brightness);
-                        }
-                        if (command instanceof OnOffType) {
-                            if (command.equals(OnOffType.OFF)) {
-                                brightness = PercentType.ZERO;
-                                // updateState(CHANNEL_BRIGHTNESS, brightness);
-                            }
-                        }
-                        if (command instanceof OnOffType) {
-                            if (command.equals(OnOffType.ON)) {
-                                brightness = PercentType.HUNDRED;
-                                // updateState(CHANNEL_BRIGHTNESS, brightness);
-                            }
-                        }
-                        if (command instanceof RefreshType) {
-                            brightness = PercentType.ZERO;
-                            updateState(CHANNEL_BRIGHTNESS, brightness);
-                        }
-                        break;
-                    case CHANNEL_SPEED:
-                        if (command instanceof DecimalType) {
-                            speed = (DecimalType) command;
-                        }
-                        if (command instanceof RefreshType) {
-                            speed = DecimalType.valueOf("0");
-                            updateState(CHANNEL_SPEED, speed);
-                        }
-                        break;
-                    case CHANNEL_POWER:
-                        if (command instanceof OnOffType) {
-                            if (command.equals(OnOffType.OFF)) {
-                                power = OnOffType.OFF;
-                                updateState(CHANNEL_POWER, OnOffType.OFF);
-                            }
-                        }
-                        if (command instanceof OnOffType) {
-                            if (command.equals(OnOffType.ON)) {
-                                power = OnOffType.ON;
-                                updateState(CHANNEL_POWER, OnOffType.ON);
-                            }
-                        }
-                        if (command instanceof RefreshType) {
-                            power = OnOffType.OFF;
-                            updateState(CHANNEL_POWER, power);
-                        }
-                        break;
-                    case CHANNEL_BLOCKING:
-                        if (command instanceof OnOffType) {
-                            if (command.equals(OnOffType.OFF)) {
-                                blocking = OnOffType.OFF;
-                                updateState(CHANNEL_BLOCKING, OnOffType.OFF);
-                            }
-                        }
-                        if (command instanceof OnOffType) {
-                            if (command.equals(OnOffType.ON)) {
-                                blocking = OnOffType.ON;
-                                updateState(CHANNEL_BLOCKING, OnOffType.ON);
-                            }
-                        }
-                        if (command instanceof RefreshType) {
-                            blocking = OnOffType.OFF;
-                            updateState(CHANNEL_BLOCKING, blocking);
-                        }
-                        break;
-                    default:
-                        // Log event to console
-                        logger.debug("Command {} is not supported by thing", command);
-                        break;
+        Thing bridge = getBridge();
+        if (bridge == null) {
+            return;
+        }
+        // Get bridge handler instance
+        EltakoBridgeHandler bridgehandler = (EltakoBridgeHandler) bridge.getHandler();
+        if (bridgehandler == null) {
+            return;
+        }
+
+        // Handle received command
+        switch (channelUID.getId()) {
+            case CHANNEL_BRIGHTNESS:
+                if (command instanceof PercentType) {
+                    brightness = (PercentType) command;
+                    updateState(CHANNEL_BRIGHTNESS, brightness);
+                    sendTelegram(bridgehandler);
                 }
-                sendTelegram(bridgehandler);
-            }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_BRIGHTNESS, brightness);
+                }
+                break;
+            case CHANNEL_SPEED:
+                if (command instanceof DecimalType) {
+                    speed = (DecimalType) command;
+                    updateState(CHANNEL_SPEED, speed);
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_SPEED, speed);
+                }
+                break;
+            case CHANNEL_POWER:
+                if (command instanceof OnOffType) {
+                    if (command.equals(OnOffType.OFF)) {
+                        power = OnOffType.OFF;
+                        updateState(CHANNEL_POWER, power);
+                        sendTelegram(bridgehandler);
+                    }
+                }
+                if (command instanceof OnOffType) {
+                    if (command.equals(OnOffType.ON)) {
+                        power = OnOffType.ON;
+                        updateState(CHANNEL_POWER, power);
+                        sendTelegram(bridgehandler);
+                    }
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_POWER, power);
+                }
+                break;
+            case CHANNEL_BLOCKING:
+                if (command instanceof OnOffType) {
+                    if (command.equals(OnOffType.OFF)) {
+                        blocking = OnOffType.OFF;
+                        updateState(CHANNEL_BLOCKING, blocking);
+                    }
+                }
+                if (command instanceof OnOffType) {
+                    if (command.equals(OnOffType.ON)) {
+                        blocking = OnOffType.ON;
+                        updateState(CHANNEL_BLOCKING, blocking);
+                    }
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_BLOCKING, blocking);
+                }
+                break;
+            default:
+                // Log event to console
+                logger.warn("Command {} is not supported by thing", command);
+                break;
         }
     }
 

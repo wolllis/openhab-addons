@@ -25,6 +25,32 @@ import org.eclipse.smarthome.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/*
+ * Direkte Übergabe des Dimmwertes von 0-100%, FUNC=38, Command 2 (ähnlich EEP A5-38-08)
+ *
+ * ORG =        0x07
+ * Data_byte3 = 0x02
+ * Data_byte2 = Dimmwert in % von 0-100 dez.
+ * Data_byte1 = Dimmgeschwindigkeit
+ *              0x00 = die am Dimmer eingestellte Dimmgeschwindigkeit wird verwendet.
+ *              0x01 = sehr schnelle Dimmspeed …. Bis …
+ *              0xFF = sehr langsame Dimmspeed
+ * Data_byte0 = DB0_Bit3 = LRN Button
+ *              (0 = Lerntelegramm, 1 = Datentelegramm)
+ *              DB0_Bit0 =  1: Dimmer an, 0: Dimmer aus.
+ *              DB0_Bit2 =  1: Dimmwert blockieren
+ *                          0: Dimmwert nicht blockiert
+ *
+ * Lerntelegramm DB3..DB0 muss so aussehen: 0xE0, 0x40, 0x0D, 0x80
+ *                           nur FSUD-230V: 0x02, 0x00, 0x00, 0x00
+ *
+ * Datentelegramme DB3..DB0 müssen z.B. so aussehen:
+ * 0x02, 0x32, 0x00, 0x09 (Dimmer an mit 50% und interner Dimmspeed)
+ * 0x02, 0x64, 0x01, 0x09 (Dimmer an mit 100% und schnellster Dimmspeed)
+ * 0x02, 0x14, 0xFF, 0x09 (Dimmer an mit 20% und langsamster Dimmspeed)
+ * 0x02, 0x.., 0x.., 0x08 (Dimmer aus)
+ */
+
 /**
  * The {@link EltakoFud14Handler} is responsible for processing FUD14 commands.
  *

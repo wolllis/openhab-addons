@@ -23,6 +23,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author Martin Wenske - Initial contribution
  */
+/**
+ * @author martin
+ *
+ */
 public class EltakoFsb14Handler extends EltakoGenericHandler {
 
     /*

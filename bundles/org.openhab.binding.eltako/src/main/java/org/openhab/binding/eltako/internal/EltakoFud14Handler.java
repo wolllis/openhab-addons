@@ -73,6 +73,10 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
 
     public EltakoFud14Handler(Thing thing) {
         super(thing);
+        brightness = PercentType.ZERO;
+        speed = DecimalType.ZERO;
+        power = OnOffType.OFF;
+        blocking = OnOffType.OFF;
     }
 
     /**

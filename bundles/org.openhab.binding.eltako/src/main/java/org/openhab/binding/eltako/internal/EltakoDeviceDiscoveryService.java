@@ -172,8 +172,11 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         // Log event to console
         logger.trace("DeviceDiscovery: Telegram Received: {}", strbuf);
         // ###########################################################
-        // Create new device
-        createdevice(packet[9], packet[4], packet[10]);
+        // Add new devices depending on the ID count replied by the device
+        for (int i = 0; i < packet[5]; i++) {
+            // Create new device
+            createdevice(packet[9], packet[4] + i, packet[10]);
+        }
     }
 
     /**
@@ -199,7 +202,7 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
         // Create result (thing)
         DiscoveryResultBuilder discoveryResultBuilder = DiscoveryResultBuilder.create(thingUID)
                 .withBridge(bridgeHandler.getThing().getUID());
-        // Add Device ID as a property
+        // Add property to device
         discoveryResultBuilder.withProperty(GENERIC_DEVICE_ID, String.format("%08d", deviceId));
         discoveryResultBuilder.withProperty(GENERIC_HARDWARE_VERSION,
                 String.format("V%d.%d", hardwareVersion >> 4, hardwareVersion & 0x0F));

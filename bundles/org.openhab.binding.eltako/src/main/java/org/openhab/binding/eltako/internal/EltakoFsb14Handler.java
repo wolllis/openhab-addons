@@ -157,7 +157,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
         int crc = (0x0B + 0x07 + 0x00 + value_time + value_command + 0x08 + ID[3] + ID[2] + ID[1] + ID[0]) % 256;
 
         // Prepare telegram
-        int[] data = new int[] { 0xA5, 0x5A, 0x0B, 0x07, 0x02, value_time, value_command, 0x08, ID[3], ID[2], ID[1],
+        int[] data = new int[] { 0xA5, 0x5A, 0x0B, 0x07, 0x00, value_time, value_command, 0x08, ID[3], ID[2], ID[1],
                 ID[0], 0x00, crc };
 
         // Get own state

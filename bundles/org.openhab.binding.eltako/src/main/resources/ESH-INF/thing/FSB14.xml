@@ -11,6 +11,10 @@
 		<description>Schaltaktor Beschattungselemente und Rollladen mit 2 Kanälen für zwei 230V-Motoren</description>
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
+            <channel id="Time" typeId="runtime" />
+            <channel id="Up" typeId="switchState" />
+            <channel id="Stop" typeId="switchState" />
+            <channel id="Down" typeId="switchState" />
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
@@ -26,4 +30,16 @@
             </parameter>
         </config-description>
 	</thing-type>
+    <channel-type id="runtime" advanced="false">
+        <item-type>Number</item-type>
+        <label>Runtime</label>
+        <category>Blinds</category>
+        <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
+    </channel-type>
+    <channel-type id="switchState">
+        <item-type>Switch</item-type>
+        <label>Switch State</label>
+        <description>On/off status of the switch</description>
+        <category>Switch</category>
+    </channel-type>
 </thing:thing-descriptions>

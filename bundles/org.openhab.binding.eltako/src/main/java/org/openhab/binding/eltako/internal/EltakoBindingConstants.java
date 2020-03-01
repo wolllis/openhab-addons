@@ -88,6 +88,12 @@ public class EltakoBindingConstants {
     public static final String CHANNEL_POWER = "power";
     public static final String CHANNEL_BLOCKING = "blocking";
 
+    // List of all FSB14 channel IDs
+    public static final String CHANNEL_TIME = "Time";
+    public static final String CHANNEL_UP = "Up";
+    public static final String CHANNEL_STOP = "Stop";
+    public static final String CHANNEL_DOWN = "Down";
+
     // List of all configuration parameters
     public static final String GENERIC_HARDWARE_VERSION = "hardwareVersion";
     public static final String GENERIC_DEVICE_ID = "deviceId";

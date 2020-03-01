@@ -12,9 +12,15 @@
  */
 package org.openhab.binding.eltako.internal;
 
+import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+
+import org.eclipse.smarthome.core.library.types.DecimalType;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
+import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,8 +58,11 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
      */
     private final Logger logger = LoggerFactory.getLogger(EltakoGenericHandler.class);
 
+    private DecimalType time;
+
     public EltakoFsb14Handler(Thing thing) {
         super(thing);
+        time = DecimalType.ZERO;
     }
 
     /**
@@ -62,6 +71,111 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         // Log event to console
-        logger.debug("Channel {} received command {} with class {}", channelUID, command, command.getClass());
+        logger.trace("Channel {} received command {} with class {}", channelUID, command, command.getClass());
+
+        // Get bridge instance
+        Thing bridge = getBridge();
+        if (bridge == null) {
+            return;
+        }
+        // Get bridge handler instance
+        EltakoBridgeHandler bridgehandler = (EltakoBridgeHandler) bridge.getHandler();
+        if (bridgehandler == null) {
+            return;
+        }
+
+        // Handle received command
+        switch (channelUID.getId()) {
+            case CHANNEL_TIME:
+                if (command instanceof DecimalType) {
+                    time = (DecimalType) command;
+                    updateState(CHANNEL_TIME, time);
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_TIME, time);
+                }
+                break;
+            case CHANNEL_UP:
+                if (command instanceof OnOffType) {
+                    updateState(CHANNEL_UP, OnOffType.OFF);
+                    sendTelegram(bridgehandler, CHANNEL_UP);
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_UP, OnOffType.OFF);
+                }
+                break;
+            case CHANNEL_STOP:
+                if (command instanceof OnOffType) {
+                    updateState(CHANNEL_STOP, OnOffType.OFF);
+                    sendTelegram(bridgehandler, CHANNEL_STOP);
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_STOP, OnOffType.OFF);
+                }
+                break;
+            case CHANNEL_DOWN:
+                if (command instanceof OnOffType) {
+                    updateState(CHANNEL_DOWN, OnOffType.OFF);
+                    sendTelegram(bridgehandler, CHANNEL_DOWN);
+                }
+                if (command instanceof RefreshType) {
+                    updateState(CHANNEL_DOWN, OnOffType.OFF);
+                }
+                break;
+            default:
+                // Log event to console
+                logger.warn("Command {} is not supported by thing", command);
+                break;
+        }
+    }
+
+    /**
+     * Prepares the data used for the telegram and sends it out
+     */
+    protected void sendTelegram(EltakoBridgeHandler bridgehandler, String channel) {
+        // Prepare channel values
+        int value_time = time.intValue();
+        int value_command;
+
+        // Convert Device ID from int into 4 bytes
+        int deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString());
+        int[] ID = new int[4];
+        ID[0] = deviceId & 0xFF;
+        ID[1] = (deviceId >> 8) & 0xFF;
+        ID[2] = (deviceId >> 16) & 0xFF;
+        ID[3] = 0x03;
+
+        if (channel == CHANNEL_UP) {
+            value_command = 0x01;
+        } else if (channel == CHANNEL_DOWN) {
+            value_command = 0x02;
+        } else {
+            value_command = 0x00;
+        }
+
+        // Calculate CRC value
+        int crc = (0x0B + 0x07 + 0x00 + value_time + value_command + 0x08 + ID[3] + ID[2] + ID[1] + ID[0]) % 256;
+
+        // Prepare telegram
+        int[] data = new int[] { 0xA5, 0x5A, 0x0B, 0x07, 0x02, value_time, value_command, 0x08, ID[3], ID[2], ID[1],
+                ID[0], 0x00, crc };
+
+        // Get own state
+        if (this.getThing().getStatus() == ThingStatus.ONLINE) {
+
+            // ####################################################
+            // Prepare data to be written to log
+            StringBuffer strbuf = new StringBuffer();
+            // Create string out of byte data
+            for (int i = 0; i < 14; i++) {
+                strbuf.append(String.format("%02X ", data[i]));
+            }
+            // Log event to console
+            logger.trace("FSB14: Telegram Send: {}", strbuf);
+            // ####################################################
+
+            // Write data by calling bridge handler method
+            bridgehandler.serialWrite(data, 14);
+        }
     }
 }

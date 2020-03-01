@@ -81,6 +81,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
     private InputStream inputStream;
     private OutputStream outputStream;
     private int rxbytes;
+    private int[] telegram = new int[14];
 
     /* TODO: Make this configurable in Bridge config */
     private static final int ELTAKO_DEFAULT_BAUD = 57600;
@@ -383,7 +384,6 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
      */
     private void processSerialData() {
         byte[] buffer = new byte[14];
-        int[] telegram = new int[14];
         int bytesRead;
 
         if (rxbytes == 0) {

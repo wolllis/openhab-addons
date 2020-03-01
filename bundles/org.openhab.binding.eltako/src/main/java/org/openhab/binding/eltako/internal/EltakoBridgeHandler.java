@@ -457,7 +457,7 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                 // TODO: Maybe add queue later
 
                 if (waitForGateway == true) {
-                    if (telegram[10] == 0x17) {
+                    if (telegram[9] == 0xff) {
                         int[] message = new int[14];
                         int[] data = new int[] { 0, 0, 0, 0 };
                         int[] id = new int[] { 0, 0, 0, 0 };

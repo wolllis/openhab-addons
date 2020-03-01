@@ -16,7 +16,7 @@
 			<!-- Properties are shown to the user but can NOT be modified by him -->
             <property name="vendor">Eltako</property>
             <property name="modelId">053</property>
-            <property name="hardwareVersion">Unknown</property>
+            <property name="hardwareVersion">---</property>
 		</properties>
         <config-description>
             <!-- Config which is needed to create the thing -->

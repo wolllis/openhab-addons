@@ -444,10 +444,10 @@ public class EltakoBridgeHandler extends ConfigStatusBridgeHandler {
                 StringBuffer strbuf = new StringBuffer();
                 // Create string out of byte data
                 for (int i = 0; i < 14; i++) {
-                    strbuf.append(String.format("%02X", telegram[i]));
+                    strbuf.append(String.format(" %02X", telegram[i]));
                 }
                 // Log event to console
-                logger.trace("Telegram Received: {}", strbuf);
+                logger.trace("Telegram Received:{}", strbuf);
                 // ############################################
 
                 // Add received telegram to RxQueue

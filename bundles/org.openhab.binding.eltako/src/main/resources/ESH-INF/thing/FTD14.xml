@@ -6,6 +6,7 @@
 	<thing-type id="FTD14">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FTD14</label>
 		<description>Telegramm-Duplizierer für den Eltako-RS485-Bus mit austauschbarer Antenne.</description>

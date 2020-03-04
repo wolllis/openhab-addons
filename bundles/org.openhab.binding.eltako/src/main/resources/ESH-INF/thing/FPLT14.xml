@@ -6,6 +6,7 @@
 	<thing-type id="FPLT14">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FPLT14</label>
 		<description>Funk-Powerline-Tunnelgateway. Uni- und Bidirektional.</description>

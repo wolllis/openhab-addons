@@ -6,6 +6,7 @@
 	<thing-type id="FSU14">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FSU14</label>
 		<description>Display-Schaltuhr mit 8 Kanälen für den Eltako-RS485-Bus. Mit Astro-Funktion.</description>

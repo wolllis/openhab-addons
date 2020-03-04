@@ -6,6 +6,7 @@
 	<thing-type id="FSR14SSR">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FSR14SSR</label>
 		<description>Stromstoß-Schaltrelais geräuschlos mit 2 Kanälen, 400 W. 2 Solid-State-Relais nicht potenzialfrei.</description>

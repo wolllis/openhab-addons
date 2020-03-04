@@ -6,6 +6,7 @@
 	<thing-type id="FWG14MS">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FWG14MS</label>
 		<description>Wetterdaten-Gateway für Multisensor MS. Bidirektional.</description>

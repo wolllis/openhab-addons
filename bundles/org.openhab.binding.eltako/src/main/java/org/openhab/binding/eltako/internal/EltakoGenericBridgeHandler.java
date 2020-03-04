@@ -16,7 +16,10 @@ package org.openhab.binding.eltako.internal;
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -29,10 +32,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.smarthome.config.core.status.ConfigStatusMessage;
 import org.eclipse.smarthome.core.thing.Bridge;
+import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.binding.ConfigStatusBridgeHandler;
+import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.util.HexUtils;
 import org.eclipse.smarthome.io.transport.serial.PortInUseException;
 import org.eclipse.smarthome.io.transport.serial.SerialPort;
@@ -43,18 +50,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link EltakoFam14BridgeHandler} is responsible for handling connection to serial interface
+ * The {@link EltakoGenericBridgeHandler} is responsible for handling connection to serial interface
  *
  * @author Martin Wenske - Initial contribution
  */
-public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
+public class EltakoGenericBridgeHandler extends ConfigStatusBridgeHandler {
 
     /*
      * Logger instance to create log entries
      */
-    private Logger logger = LoggerFactory.getLogger(EltakoFam14BridgeHandler.class);
+    private Logger logger = LoggerFactory.getLogger(EltakoGenericBridgeHandler.class);
 
-    public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<>(Arrays.asList(THING_TYPE_FAM14));
+    public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<>(Arrays.asList(THING_TYPE_FGW14));
 
     /*
      * Instance of serialPortManager
@@ -62,15 +69,12 @@ public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
     private SerialPortManager serialPortManager;
 
     /*
-     * Holds instance of Device Discovery Service
-     */
-    private EltakoDeviceDiscoveryService discoveryService;
-
-    /*
      * Variables related to serial data handling
      */
     private SerialPort serialPort;
     private String comportName;
+    protected InputStream inputStream;
+    protected OutputStream outputStream;
     private int rxbytes;
     private int[] telegram = new int[14];
 
@@ -81,7 +85,6 @@ public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> bridgePollingJob;
     private Boolean bridgePollingThreadIsNotCanceled;
-    private Boolean waitForGateway;
 
     // Queue implementation for telegram handling
     Queue<int[]> telegramQueue = new LinkedList<int[]>();
@@ -91,16 +94,16 @@ public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
     /**
      * Initializer method
      */
-    public EltakoFam14BridgeHandler(Bridge bridge, SerialPortManager serialPortManager) {
-        super(bridge, serialPortManager);
+    public EltakoGenericBridgeHandler(Bridge bridge, SerialPortManager serialPortManager) {
+        super(bridge);
         this.serialPortManager = serialPortManager;
         serialPort = null;
+        outputStream = null;
+        inputStream = null;
         comportName = null;
         bridgePollingThreadIsNotCanceled = null;
         telegramQueue.clear();
         listeners = new HashMap<>();
-        waitForGateway = false;
-        discoveryService = null;
         rxbytes = 0;
     }
 
@@ -245,18 +248,116 @@ public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
     }
 
     /**
-     * Sets the handle instance of the used Discovery Service.
-     *
-     * @param handle
+     * TODO: What is this method good for?
      */
-    public void setServiceHandle(EltakoDeviceDiscoveryService handle) {
-        discoveryService = handle;
+    @Override
+    public Collection<ConfigStatusMessage> getConfigStatus() {
+
+        // Log event to console
+        // logger.debug("GetConfigStatus for bridge => {}", this.getThing().getUID());
+
+        Collection<ConfigStatusMessage> configStatusMessages = new LinkedList<>();
+        return configStatusMessages;
+    }
+
+    /**
+     * Event handler is called in case a channel has received a command
+     */
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
+    }
+
+    /**
+     * Write data to serial interface
+     */
+    protected void serialWrite(int[] message, int length) {
+
+        // Safety check
+        if (length == 0 || message == null) {
+            // Log event to console
+            logger.error("Serial Write: Length is zero or invalid buffer");
+            return;
+        }
+
+        // Another safety check
+        if (outputStream == null) {
+            // Log event to console
+            logger.error("Serial Write: outputStream is not initilized");
+            return;
+        }
+
+        // ############################################
+        // Prepare data to be written to log
+        StringBuffer strbuf = new StringBuffer();
+        // Create string out of byte data
+        for (int i = 0; i < length; i++) {
+            strbuf.append(String.format("%02X ", message[i]));
+        }
+        // Log event to console
+        logger.trace("Serial Write: {}", strbuf);
+        // ############################################
+        byte[] buffer = new byte[length];
+        for (int i = 0; i < length; i++) {
+            buffer[i] = (byte) message[i];
+        }
+        // Pass data to output steam
+        try {
+            outputStream.write(buffer, 0, length);
+            // Force all remaining data to be written immediately
+            outputStream.flush();
+        } catch (IOException e) {
+            // Log event to console
+            logger.error("Write action on {} failed: {}", comportName, e);
+        }
+    }
+
+    /**
+     * Read data from serial interface
+     */
+    protected int serialRead(byte[] buffer, int length) {
+
+        int rxcount = 0;
+
+        // Safety check
+        if (length == 0 || buffer == null) {
+            // Log event to console
+            logger.error("Serial Read: Length is zero or invalid buffer");
+            return 0;
+        }
+
+        // Another safety check
+        if (inputStream == null) {
+            // Log event to console
+            logger.error("Serial Write: inputstream is not initilized");
+            return 0;
+        }
+
+        // Pull data from input stream
+        try {
+            rxcount = inputStream.read(buffer, 0, length);
+        } catch (IOException e) {
+            logger.error("Read action on {} failed: {}", comportName, e);
+            return 0;
+        }
+
+        // ############################################
+        if (rxcount > 0) {
+            // Prepare data to be written to log
+            StringBuffer strbuf = new StringBuffer();
+            // Create string out of byte data
+            for (int i = 0; i < rxcount; i++) {
+                strbuf.append(String.format("%02X ", buffer[i] & 0xFF));
+            }
+            // Log event to console
+            logger.trace("Serial Read: {}", strbuf);
+        }
+        // ############################################
+        return rxcount;
     }
 
     /**
      * Check if serial data is available. Check for sync bytes. Forward telegrams to registered listeners.
      */
-    @Override
     protected void processSerialData() {
         byte[] buffer = new byte[14];
         int bytesRead;
@@ -331,31 +432,12 @@ public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
                 // logger.debug("Element added to Queue. Size is now {}", telegramQueue.size());
                 // TODO: Maybe add queue later
 
-                if (waitForGateway == true) {
-                    if (telegram[9] == 0xff) {
-                        int[] message = new int[14];
-                        int[] data = new int[] { 0, 0, 0, 0 };
-                        int[] id = new int[] { 0, 0, 0, 0 };
-                        // Update bridge status
-                        updateStatus(ThingStatus.ONLINE);
-                        // Waiting for FAM14 to respond with status telegram
-                        waitForGateway = false;
-                        // parse message
-                        parseMessage(telegram);
-                        // Set FAM14 back to telegram mode
-                        constuctMessage(message, 5, 0xFF, data, id, 0x00);
-                        serialWrite(message, 14);
-                    }
-                } else {
-                    // Forward telegram to listeners
-                    byte senderId[] = { 0, 0, 0, 1 };
-                    long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
-                    HashSet<EltakoTelegramListener> pl = listeners.get(s);
-                    if (pl != null) {
-                        pl.forEach(l -> l.telegramReceived(telegram));
-                    }
-                    // Forward telegram to Device Discovery Service
-                    discoveryService.telegramReceived(telegram);
+                // Forward telegram to listeners
+                byte senderId[] = { 0, 0, 0, 1 };
+                long s = Long.parseLong(HexUtils.bytesToHex(senderId), 16);
+                HashSet<EltakoTelegramListener> pl = listeners.get(s);
+                if (pl != null) {
+                    pl.forEach(l -> l.telegramReceived(telegram));
                 }
 
                 // Reset byte counter
@@ -365,69 +447,78 @@ public class EltakoFam14BridgeHandler extends EltakoGenericBridgeHandler {
     }
 
     /**
-     * Check for bridge status
-     */
-    private void handlebridgeStatus() {
-
-        ThingStatus status = this.getThing().getStatus();
-
-        // Check for bridge status
-        if ((status == ThingStatus.UNKNOWN) && (waitForGateway == false)) {
-            // Bridge has state UNKOWN right after initialization
-            int[] message = new int[14];
-            int[] data = new int[] { 0, 0, 0, 0 };
-            int[] id = new int[] { 0, 0, 0, 0 };
-            // Force FAM14 gateway into config mode
-            constuctMessage(message, 5, 0xFF, data, id, 0xFF);
-            serialWrite(message, 14);
-            // Search for FAM14 gateway
-            constuctMessage(message, 5, 0xF0, data, id, 0xFF);
-            serialWrite(message, 14);
-            // Wait for response from FAM14 gateway
-            waitForGateway = true;
-        }
-    }
-
-    /**
      * Serves as the main polling thread for a couple of independent actions
      */
     protected Runnable bridgePollingThread = () -> {
         // Never stop reading data from serial interface unless the bridge should be disposed
         while (bridgePollingThreadIsNotCanceled) {
-            // Perform actions depending on bridge state
-            handlebridgeStatus();
             // Receive serial data
             processSerialData();
         }
     };
 
     /**
-     * Parse a received telegram and extract some usefull information
+     * Create a message to be send out over serial interface
      *
      * @param message
+     * @param header_ident
+     * @param org
+     * @param data
+     * @param id
+     * @param status
      */
-    private void parseMessage(int[] message) {
-        // Extract information from telegram
-        // int sync_byte_1 = message[0];
-        // int sync_byte_2 = message[1];
-        // int header_ident = message[2] >> 5;
-        // int length = message[2] & 0x1F;
-        // int org = message[3];
-        // int own_id = message[4];
-        // int used_ids = message[5];
-        // int unknown_1 = message[6];
-        // int unknown_2 = message[7];
-        // int unknown_3 = message[8];
-        // int device_type_number = message[9];
-        int version_number_high = message[10] >> 4;
-        int version_number_low = message[10] & 0x0F;
-        // int unknown_4 = message[11];
-        // int unknown_5 = message[12];
-        // int crc = message[13];
+    protected void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {
+        // Fill message with data
+        message[0] = 0xA5;
+        message[1] = 0x5A;
+        message[2] = (header_ident << 5) + 0x0B;
+        message[3] = org;
+        message[4] = data[0];
+        message[5] = data[1];
+        message[6] = data[2];
+        message[7] = data[3];
+        message[8] = id[0];
+        message[9] = id[1];
+        message[10] = id[2];
+        message[11] = id[3];
+        message[12] = status;
+        message[13] = 0;
 
-        // Update thing property
-        updateProperty(FAM14_HARDWARE_VERSION, String.format("V%d.%d", version_number_high, version_number_low));
+        // Calculate CRC from message data (excluding sync bytes)
+        for (int i = 2; i < 13; i++) {
+            message[13] += message[i];
+        }
+        // CRC is only a single byte so we break it down to 8bit
+        message[13] = message[13] % 256;
+    }
 
+    /**
+     * Add new listener to receiver queue
+     *
+     * @param listener
+     * @param senderIdToListenTo
+     */
+    public void addPacketListener(EltakoTelegramListener listener, long senderIdToListenTo) {
+        if (listeners.computeIfAbsent(senderIdToListenTo, k -> new HashSet<>()).add(listener)) {
+            logger.debug("Listener {} added with ID {}", listener, senderIdToListenTo);
+        }
+    }
+
+    /**
+     * Remove listener from receiver queue
+     *
+     * @param listener
+     * @param senderIdToListenTo
+     */
+    public void removePacketListener(EltakoTelegramListener listener, long senderIdToListenTo) {
+        HashSet<EltakoTelegramListener> pl = listeners.get(senderIdToListenTo);
+        if (pl != null) {
+            pl.remove(listener);
+            if (pl.isEmpty()) {
+                listeners.remove(senderIdToListenTo);
+            }
+            logger.debug("Listener {} removed with ID {}", listener, senderIdToListenTo);
+        }
     }
 
 }

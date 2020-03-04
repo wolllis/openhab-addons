@@ -93,7 +93,7 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
             return;
         }
         // Get bridge handler instance
-        EltakoBridgeHandler bridgehandler = (EltakoBridgeHandler) bridge.getHandler();
+        EltakoGenericBridgeHandler bridgehandler = (EltakoGenericBridgeHandler) bridge.getHandler();
         if (bridgehandler == null) {
             return;
         }
@@ -165,7 +165,7 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
     /**
      * Prepares the data used for the telegram and sends it out
      */
-    protected void sendTelegram(EltakoBridgeHandler bridgehandler) {
+    protected void sendTelegram(EltakoGenericBridgeHandler bridgehandler) {
         // Prepare channel values
         int value_brightness = brightness.intValue();
         int value_speed = speed.intValue();

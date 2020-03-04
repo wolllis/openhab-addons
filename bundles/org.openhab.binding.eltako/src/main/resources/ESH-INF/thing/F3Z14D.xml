@@ -6,6 +6,7 @@
 	<thing-type id="F3Z14D">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>F3Z14D</label>
 		<description>Funk-Zähler-Sammler für Strom-, Gas- und Wasserzähler. Für 3 S0-Schnittstellen und/oder 3 Abtaster AFZ.</description>

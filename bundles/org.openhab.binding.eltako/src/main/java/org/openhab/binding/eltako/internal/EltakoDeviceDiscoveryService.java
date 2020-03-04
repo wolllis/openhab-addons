@@ -36,11 +36,11 @@ public class EltakoDeviceDiscoveryService extends AbstractDiscoveryService {
     /*
      * Some local variables
      */
-    private EltakoBridgeHandler bridgeHandler;
+    private EltakoFam14BridgeHandler bridgeHandler;
     private Boolean DeviceDiscoveryThreadIsNotCanceled;
     private Boolean DeviceDiscoveryThreadDone;
 
-    public EltakoDeviceDiscoveryService(EltakoBridgeHandler bridgeHandler) {
+    public EltakoDeviceDiscoveryService(EltakoFam14BridgeHandler bridgeHandler) {
         super(null, 40, false);
         this.bridgeHandler = bridgeHandler;
         DeviceDiscoveryThreadIsNotCanceled = false;

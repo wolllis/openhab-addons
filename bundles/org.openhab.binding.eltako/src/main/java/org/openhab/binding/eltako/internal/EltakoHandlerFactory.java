@@ -49,10 +49,10 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
     /**
      * Create list of things which are supported by this binding
      */
-    private final static Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream
-            .concat(EltakoBridgeHandler.SUPPORTED_THING_TYPES.stream(),
-                    EltakoBindingConstants.SUPPORTED_DEVICE_THING_TYPES_UIDS.stream())
-            .collect(Collectors.toSet());
+    private final static Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream.concat(
+            Stream.concat(EltakoFam14BridgeHandler.SUPPORTED_THING_TYPES.stream(),
+                    EltakoBindingConstants.SUPPORTED_DEVICE_THING_TYPES_UIDS.stream()),
+            EltakoFgw14BridgeHandler.SUPPORTED_THING_TYPES.stream()).collect(Collectors.toSet());
 
     private Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
 
@@ -88,11 +88,18 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
 
         if (THING_TYPE_FAM14.equals(thingTypeUID)) {
             // Create new thing of type bridge using serialPortManager instance
-            EltakoBridgeHandler bridgeHandler = new EltakoBridgeHandler((Bridge) thing, serialPortManager);
+            EltakoFam14BridgeHandler bridgeHandler = new EltakoFam14BridgeHandler((Bridge) thing, serialPortManager);
             // Register device discovery service
             EltakoDeviceDiscoveryService service = registerDeviceDiscoveryService(bridgeHandler);
             // Pass service handle to bridge
             bridgeHandler.setServiceHandle(service);
+            // Return
+            return bridgeHandler;
+        }
+
+        if (THING_TYPE_FGW14.equals(thingTypeUID)) {
+            // Create new thing of type bridge using serialPortManager instance
+            EltakoFgw14BridgeHandler bridgeHandler = new EltakoFgw14BridgeHandler((Bridge) thing, serialPortManager);
             // Return
             return bridgeHandler;
         }
@@ -146,7 +153,7 @@ public class EltakoHandlerFactory extends BaseThingHandlerFactory {
     /**
      * This method is called in order to create and register the discovery service handler.
      */
-    private EltakoDeviceDiscoveryService registerDeviceDiscoveryService(EltakoBridgeHandler handler) {
+    private EltakoDeviceDiscoveryService registerDeviceDiscoveryService(EltakoFam14BridgeHandler handler) {
         // Create new instance of Eltako Discovery Service
         EltakoDeviceDiscoveryService discoveryService = new EltakoDeviceDiscoveryService(handler);
         // Tell discovery service it has been added to bridge

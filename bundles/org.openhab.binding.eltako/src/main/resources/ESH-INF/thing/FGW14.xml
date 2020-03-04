@@ -3,27 +3,19 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-	<thing-type id="FGW14">
-        <supported-bridge-type-refs>
-            <bridge-type-ref id="FAM14" />
-        </supported-bridge-type-refs>
-		<label>FGW14</label>
-		<description>Mehrfach-Gateway. Bidirektional.</description>
-		<channels>
-			<!-- Channels represent the state of the Thing which can be linked to an Item -->
-		</channels>
-		<properties>
-			<!-- Properties are shown to the user but can NOT be modified by him -->
-            <property name="vendor">Eltako</property>
-            <property name="modelId">254</property>
-            <property name="hardwareVersion">---</property>
-		</properties>
+    <bridge-type id="FGW14">
+        <label>FGW14</label>
+        <description>Mehrfach-Gateway. Bidirektional.</description>
+        <properties>
+            <!-- Properties are shown to the user but can NOT be modified by him -->
+            <property name="Version">---</property>
+        </properties>
+        <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description>
-            <!-- Config which is needed to create the thing -->
-            <parameter name="deviceId" type="text" pattern="([0-9A-Fa-f]{8})" required="true">
-                <label>Device Identification</label>
-                <description>Needs to match the taught in device ID</description>
+            <parameter name="SerialComPort" type="text" required="true">
+                <label>Serial Comport Number</label>
+                <description>e.g. "COM1" under Windows or "/dev/ttyUSB0" under Linux</description>
             </parameter>
         </config-description>
-	</thing-type>
+    </bridge-type>
 </thing:thing-descriptions>

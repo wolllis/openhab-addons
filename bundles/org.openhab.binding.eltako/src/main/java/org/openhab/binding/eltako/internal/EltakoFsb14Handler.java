@@ -81,7 +81,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
             return;
         }
         // Get bridge handler instance
-        EltakoBridgeHandler bridgehandler = (EltakoBridgeHandler) bridge.getHandler();
+        EltakoGenericBridgeHandler bridgehandler = (EltakoGenericBridgeHandler) bridge.getHandler();
         if (bridgehandler == null) {
             return;
         }
@@ -129,7 +129,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
     /**
      * Prepares the data used for the telegram and sends it out
      */
-    protected void sendTelegram(EltakoBridgeHandler bridgehandler, CommandType state) {
+    protected void sendTelegram(EltakoGenericBridgeHandler bridgehandler, CommandType state) {
         // Prepare channel values
         int value_time = time.intValue();
         int value_command;

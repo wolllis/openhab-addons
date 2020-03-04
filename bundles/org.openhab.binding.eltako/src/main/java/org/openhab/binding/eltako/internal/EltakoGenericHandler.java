@@ -15,7 +15,7 @@ package org.openhab.binding.eltako.internal;
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.GENERIC_DEVICE_ID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -66,14 +66,13 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
         // Set thing status to UNKNOWN
         this.updateStatus(ThingStatus.UNKNOWN);
 
-        EltakoBridgeHandler bridgeHandle = this.getMyBridgeHandle();
-        if (bridgeHandle != null) {
-            // Listen for a specific ID so received telegrams are forwarded to thing (Ignore 4th byte)
-            bridgeHandle.addPacketListener(this,
-                    Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString()) & 0xFFFFFF);
-            // Set thing status depending on status of bridge
-            Thing bridge = this.getMyBridge();
-            if (bridge != null) {
+        Bridge bridge = this.getBridge();
+        if (bridge != null) {
+            EltakoGenericBridgeHandler bridgeHandle = (EltakoGenericBridgeHandler) bridge.getHandler();
+            if (bridgeHandle != null) {
+                // Listen for a specific ID so received telegrams are forwarded to thing (Ignore 4th byte)
+                bridgeHandle.addPacketListener(this,
+                        Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString()) & 0xFFFFFF);
                 if (bridge.getStatus() != ThingStatus.ONLINE) {
                     // Set thing status to offline
                     this.updateStatus(ThingStatus.OFFLINE);
@@ -106,43 +105,6 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
     }
 
     /**
-     * Bridge handler getter
-     */
-    protected @Nullable EltakoBridgeHandler getMyBridgeHandle() {
-        Thing bridge = this.getBridge();
-        if (bridge != null) {
-            EltakoBridgeHandler bridgeHandle = (EltakoBridgeHandler) bridge.getHandler();
-            if (bridgeHandle != null) {
-                // Return
-                return bridgeHandle;
-            } else {
-                // Log event to console
-                logger.error("BridgeHandle not available for thing");
-                return null;
-            }
-        } else {
-            // Log event to console
-            logger.error("Bridge not available for thing");
-            return null;
-        }
-    }
-
-    /**
-     * Bridge getter
-     */
-    protected @Nullable Thing getMyBridge() {
-        Thing bridge = this.getBridge();
-        if (bridge != null) {
-            // Return
-            return bridge;
-        } else {
-            // Log event to console
-            logger.error("BridgeHandle not available for thing");
-            return null;
-        }
-    }
-
-    /**
      * Event handler is called in case a channel has received a command
      */
     @Override
@@ -163,10 +125,13 @@ public class EltakoGenericHandler extends BaseThingHandler implements EltakoTele
     public void dispose() {
         logger.debug("Dispose thing instance");
 
-        EltakoBridgeHandler bridgeHandle = this.getMyBridgeHandle();
-        if (bridgeHandle != null) {
-            // Listen for a specific ID so received telegrams are forwarded to thing
-            bridgeHandle.removePacketListener(this, deviceId);
+        Bridge bridge = this.getBridge();
+        if (bridge != null) {
+            EltakoGenericBridgeHandler bridgeHandle = (EltakoGenericBridgeHandler) bridge.getHandler();
+            if (bridgeHandle != null) {
+                // Listen for a specific ID so received telegrams are forwarded to thing
+                bridgeHandle.removePacketListener(this, deviceId);
+            }
         }
     }
 

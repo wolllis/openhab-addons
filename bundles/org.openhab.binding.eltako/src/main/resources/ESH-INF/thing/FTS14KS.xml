@@ -6,6 +6,7 @@
 	<thing-type id="FTS14KS">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FTS14KS</label>
 		<description>FTS14-Kommunikationsschnittstelle fürden Eltako-RS485-Bus mit  integriertemSchaltnetzteil 12 V DC/8 W.</description>

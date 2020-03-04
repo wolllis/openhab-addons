@@ -6,6 +6,7 @@
 	<thing-type id="FTS14GBZ">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FTS14GBZ</label>
 		<description>Gateway zur Zentralsteuerung mit Kleinspannung der Stromstoßschalter für Beschattungs­elemente und Rollladen ESB61ZK.</description>

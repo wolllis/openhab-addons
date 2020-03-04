@@ -6,6 +6,7 @@
 	<thing-type id="FTS14TG">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FTS14TG</label>
 		<description>Taster-Gateway für FTS14-Systeme.</description>

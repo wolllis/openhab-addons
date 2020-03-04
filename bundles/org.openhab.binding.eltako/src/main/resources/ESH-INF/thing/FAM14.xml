@@ -8,7 +8,7 @@
         <description>Funk-Antennenmodul für den Eltako-RS485-Bus mit austauschbarer Antenne. Mit integriertem Schaltnetzteil 12 V DC/8 W. Bidirektional.</description>
         <properties>
             <!-- Properties are shown to the user but can NOT be modified by him -->
-            <property name="Version">Unknown</property>
+            <property name="Version">---</property>
         </properties>
         <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description>

@@ -6,6 +6,7 @@
 	<thing-type id="FDG14">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FDG14</label>
 		<description>DALI-Gateway, bidirektional.</description>

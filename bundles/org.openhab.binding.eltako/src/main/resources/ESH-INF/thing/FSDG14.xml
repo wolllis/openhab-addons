@@ -6,6 +6,7 @@
 	<thing-type id="FSDG14">
         <supported-bridge-type-refs>
             <bridge-type-ref id="FAM14" />
+            <bridge-type-ref id="FGW14" />
         </supported-bridge-type-refs>
 		<label>FSDG14</label>
 		<description>Funk-Stromzähler-Datengateway für Zähler mit IR-Schnittstelle IEC 62056-21. 2 Kanäle.</description>

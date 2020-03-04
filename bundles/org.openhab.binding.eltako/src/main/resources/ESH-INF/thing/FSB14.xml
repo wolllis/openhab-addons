@@ -12,9 +12,7 @@
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
             <channel id="Time" typeId="runtime" />
-            <channel id="Up" typeId="switchState" />
-            <channel id="Stop" typeId="switchState" />
-            <channel id="Down" typeId="switchState" />
+            <channel id="Control" typeId="control" />
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
@@ -36,10 +34,10 @@
         <category>Blinds</category>
         <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
     </channel-type>
-    <channel-type id="switchState">
-        <item-type>Switch</item-type>
-        <label>Switch State</label>
-        <description>On/off status of the switch</description>
-        <category>Switch</category>
+    <!-- Control Channel Type -->
+    <channel-type id="control">
+        <item-type>Rollershutter</item-type>
+        <label>Control</label>
+        <description>Allows to control the devices connected to this channel or group by sending UP, DOWN, STOP commands.</description>
     </channel-type>
 </thing:thing-descriptions>

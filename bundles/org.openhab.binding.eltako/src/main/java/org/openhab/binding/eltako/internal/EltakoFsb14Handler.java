@@ -15,7 +15,9 @@ package org.openhab.binding.eltako.internal;
 import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
 
 import org.eclipse.smarthome.core.library.types.DecimalType;
-import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.library.types.PercentType;
+import org.eclipse.smarthome.core.library.types.StopMoveType;
+import org.eclipse.smarthome.core.library.types.UpDownType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -95,31 +97,26 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                     updateState(CHANNEL_TIME, time);
                 }
                 break;
-            case CHANNEL_UP:
-                if (command instanceof OnOffType) {
-                    updateState(CHANNEL_UP, OnOffType.OFF);
-                    sendTelegram(bridgehandler, CHANNEL_UP);
+            case CHANNEL_CONTROL:
+                if (command instanceof UpDownType) {
+                    if (command.equals(UpDownType.UP)) {
+                        updateState(CHANNEL_CONTROL, PercentType.ZERO);
+                        sendTelegram(bridgehandler, CommandType.UP);
+                    }
+                    if (command.equals(UpDownType.DOWN)) {
+                        updateState(CHANNEL_CONTROL, PercentType.HUNDRED);
+                        sendTelegram(bridgehandler, CommandType.DOWN);
+                    }
+                }
+                if (command instanceof StopMoveType) {
+                    if (command.equals(StopMoveType.STOP)) {
+                        updateState(CHANNEL_CONTROL, PercentType.valueOf("50"));
+                        sendTelegram(bridgehandler, CommandType.STOP);
+                    }
                 }
                 if (command instanceof RefreshType) {
-                    updateState(CHANNEL_UP, OnOffType.OFF);
-                }
-                break;
-            case CHANNEL_STOP:
-                if (command instanceof OnOffType) {
-                    updateState(CHANNEL_STOP, OnOffType.OFF);
-                    sendTelegram(bridgehandler, CHANNEL_STOP);
-                }
-                if (command instanceof RefreshType) {
-                    updateState(CHANNEL_STOP, OnOffType.OFF);
-                }
-                break;
-            case CHANNEL_DOWN:
-                if (command instanceof OnOffType) {
-                    updateState(CHANNEL_DOWN, OnOffType.OFF);
-                    sendTelegram(bridgehandler, CHANNEL_DOWN);
-                }
-                if (command instanceof RefreshType) {
-                    updateState(CHANNEL_DOWN, OnOffType.OFF);
+                    // TODO: Trigger device to report state
+                    // updateState(CHANNEL_CONTROL, CommandType.STOP);
                 }
                 break;
             default:
@@ -132,7 +129,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
     /**
      * Prepares the data used for the telegram and sends it out
      */
-    protected void sendTelegram(EltakoBridgeHandler bridgehandler, String channel) {
+    protected void sendTelegram(EltakoBridgeHandler bridgehandler, CommandType state) {
         // Prepare channel values
         int value_time = time.intValue();
         int value_command;
@@ -145,9 +142,9 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
         ID[2] = (deviceId >> 16) & 0xFF;
         ID[3] = 0x03;
 
-        if (channel == CHANNEL_UP) {
+        if (state == CommandType.UP) {
             value_command = 0x01;
-        } else if (channel == CHANNEL_DOWN) {
+        } else if (state == CommandType.DOWN) {
             value_command = 0x02;
         } else {
             value_command = 0x00;

@@ -116,6 +116,9 @@ public class EltakoGenericBridgeHandler extends ConfigStatusBridgeHandler {
         // Log event to console
         logger.debug("Initialize bridge => {}", this.getThing().getUID());
 
+        // Copy device ID from config into property
+        getThing().setProperty(GENERIC_DEVICE_ID, (String) getThing().getConfiguration().get(GENERIC_DEVICE_ID));
+
         // Set bridge status to UNKNOWN (always good practice)
         updateStatus(ThingStatus.UNKNOWN);
 

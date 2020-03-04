@@ -6,16 +6,7 @@
     <bridge-type id="FGW14">
         <label>FGW14</label>
         <description>Mehrfach-Gateway. Bidirektional.</description>
-        <properties>
-            <!-- Properties are shown to the user but can NOT be modified by him -->
-            <property name="Version">---</property>
-        </properties>
         <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
-        <config-description>
-            <parameter name="SerialComPort" type="text" required="true">
-                <label>Serial Comport Number</label>
-                <description>e.g. "COM1" under Windows or "/dev/ttyUSB0" under Linux</description>
-            </parameter>
-        </config-description>
+        <config-description-ref uri="bridge-type:eltako:genericbridge" />
     </bridge-type>
 </thing:thing-descriptions>

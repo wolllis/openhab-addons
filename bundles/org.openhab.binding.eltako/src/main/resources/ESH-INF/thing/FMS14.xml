@@ -19,12 +19,7 @@
             <property name="modelId">003</property>
             <property name="hardwareVersion">---</property>
 		</properties>
-        <config-description>
-            <!-- Config which is needed to create the thing -->
-            <parameter name="deviceId" type="text" pattern="([0-9A-Fa-f]{8})" required="true">
-                <label>Device Identification</label>
-                <description>Needs to match the taught in device ID</description>
-            </parameter>
-        </config-description>
+        <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
+        <config-description-ref uri="thing-type:eltako:genericthing" />
 	</thing-type>
 </thing:thing-descriptions>

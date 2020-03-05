@@ -40,4 +40,11 @@
 	    </parameter>
     </config-description>
 
+    <config-description uri="thing-type:eltako:genericthing">
+        <parameter name="deviceId" type="text" pattern="(25[0-4]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[1-9])" required="true">
+            <label>Device ID number</label>
+            <description>Needs to match the device ID set by PCT14</description>
+        </parameter>
+    </config-description>
+    
 </config-description:config-descriptions>

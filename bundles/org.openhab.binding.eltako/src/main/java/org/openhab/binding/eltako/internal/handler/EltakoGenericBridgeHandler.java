@@ -11,9 +11,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.handler;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+import static org.openhab.binding.eltako.internal.misc.EltakoBindingConstants.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +46,8 @@ import org.eclipse.smarthome.io.transport.serial.SerialPort;
 import org.eclipse.smarthome.io.transport.serial.SerialPortIdentifier;
 import org.eclipse.smarthome.io.transport.serial.SerialPortManager;
 import org.eclipse.smarthome.io.transport.serial.UnsupportedCommOperationException;
+import org.openhab.binding.eltako.internal.misc.EltakoBindingConstants;
+import org.openhab.binding.eltako.internal.misc.EltakoTelegramListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -273,7 +275,7 @@ public class EltakoGenericBridgeHandler extends ConfigStatusBridgeHandler {
     /**
      * Write data to serial interface
      */
-    protected void serialWrite(int[] message, int length) {
+    public void serialWrite(int[] message, int length) {
 
         // Safety check
         if (length == 0 || message == null) {
@@ -470,7 +472,7 @@ public class EltakoGenericBridgeHandler extends ConfigStatusBridgeHandler {
      * @param id
      * @param status
      */
-    protected void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {
+    public void constuctMessage(int[] message, int header_ident, int org, int[] data, int[] id, int status) {
         // Fill message with data
         message[0] = 0xA5;
         message[1] = 0x5A;

@@ -10,14 +10,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.handler;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+import static org.openhab.binding.eltako.internal.misc.EltakoBindingConstants.*;
 
 import org.eclipse.smarthome.core.library.types.DecimalType;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.PercentType;
-import org.eclipse.smarthome.core.library.types.StopMoveType;
-import org.eclipse.smarthome.core.library.types.UpDownType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -27,42 +26,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * Direktes Fahrkommando mit Angabe der Laufzeit in Sek. FUNC = 3F, Typ = 7F (universal). Für jeden Kanal separat.
+ * Direkte Übergabe des Dimmwertes von 0-100%, FUNC=38, Command 2 (ähnlich EEP A5-38-08)
  *
- * ORG        = 0x07
- * Data_byte3 = Laufzeit in 100ms MSB
- * Data_byte2 = Laufzeit in 100ms LSB, oder Laufzeit in Sekunden 1-255 dez., die Laufzeiteinstellung am Gerät wird ignoriert.
- * Data_byte1 = Kommando:
- *              0x00 = Stopp
- *              0x01 = Auf
- *              0x02 = Ab
+ * ORG =        0x07
+ * Data_byte3 = 0x02
+ * Data_byte2 = Dimmwert in % von 0-100 dez.
+ * Data_byte1 = Dimmgeschwindigkeit
+ *              0x00 = die am Dimmer eingestellte Dimmgeschwindigkeit wird verwendet.
+ *              0x01 = sehr schnelle Dimmspeed …. Bis …
+ *              0xFF = sehr langsame Dimmspeed
  * Data_byte0 = DB0_Bit3 = LRN Button
  *              (0 = Lerntelegramm, 1 = Datentelegramm)
- *              DB0_Bit2 = Aktor für Taster blockieren/freigeben
- *              (0 = freigeben, 1 = blockieren)
- *              DB0_Bit1 = Umschaltung Laufzeit in Sekunden oder in 100ms.
- *              (0 = Laufzeit nur in DB2 in Sekunden)
- *              (1 = Laufzeit in DB3(MSB)+DB2(LSB) in 100ms.)
+ *              DB0_Bit0 =  1: Dimmer an, 0: Dimmer aus.
+ *              DB0_Bit2 =  1: Dimmwert blockieren
+ *                          0: Dimmwert nicht blockiert
  *
- * Lerntelegramm DB3..DB0 muss so aussehen: 0xFF, 0xF8, 0x0D, 0x80
+ * Lerntelegramm DB3..DB0 muss so aussehen: 0xE0, 0x40, 0x0D, 0x80
+ *                           nur FSUD-230V: 0x02, 0x00, 0x00, 0x00
  *
- * Mit eingelernten Tastern kann jederzeit unterbrochen werden!
-*/
+ * Datentelegramme DB3..DB0 müssen z.B. so aussehen:
+ * 0x02, 0x32, 0x00, 0x09 (Dimmer an mit 50% und interner Dimmspeed)
+ * 0x02, 0x64, 0x01, 0x09 (Dimmer an mit 100% und schnellster Dimmspeed)
+ * 0x02, 0x14, 0xFF, 0x09 (Dimmer an mit 20% und langsamster Dimmspeed)
+ * 0x02, 0x.., 0x.., 0x08 (Dimmer aus)
+ */
+
 /**
- * The {@link EltakoFsb14Handler} is responsible for processing device specific commands.
+ * The {@link EltakoFud14Handler} is responsible for processing FUD14 commands.
  *
  * @author Martin Wenske - Initial contribution
  */
-public class EltakoFsb14Handler extends EltakoGenericHandler {
+public class EltakoFud14Handler extends EltakoGenericHandler {
 
     /*
      * Logger instance to create log entries
      */
     private final Logger logger = LoggerFactory.getLogger(EltakoGenericHandler.class);
 
-    private DecimalType time = DecimalType.ZERO;
+    /**
+     * Default internal values for additional telegram options
+     */
+    private DecimalType speed = DecimalType.ZERO;
+    private OnOffType blocking = OnOffType.OFF;
 
-    public EltakoFsb14Handler(Thing thing) {
+    public EltakoFud14Handler(Thing thing) {
         super(thing);
     }
 
@@ -87,10 +94,11 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
 
         // Handle received command
         switch (channelUID.getId()) {
-            case CHANNEL_RUNTIME:
-                if (command instanceof DecimalType) {
-                    time = (DecimalType) command;
-                    updateState(CHANNEL_RUNTIME, time);
+            case CHANNEL_BRIGHTNESS:
+                if (command instanceof PercentType) {
+                    PercentType brightness = (PercentType) command;
+                    updateState(CHANNEL_BRIGHTNESS, brightness);
+                    sendTelegram(bridgehandler, brightness);
                 }
                 if (command instanceof RefreshType) {
                     /*
@@ -98,25 +106,36 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                      * we have to rely on persistence service to restore
                      * the item state
                      * => Do nothing
-                     * updateState(CHANNEL_TIME, time);
+                     * updateState(CHANNEL_BRIGHTNESS, brightness);
                      */
                 }
                 break;
-            case CHANNEL_CONTROL:
-                if (command instanceof UpDownType) {
-                    if (command.equals(UpDownType.UP)) {
-                        updateState(CHANNEL_CONTROL, PercentType.ZERO);
-                        sendTelegram(bridgehandler, CommandType.UP);
-                    }
-                    if (command.equals(UpDownType.DOWN)) {
-                        updateState(CHANNEL_CONTROL, PercentType.HUNDRED);
-                        sendTelegram(bridgehandler, CommandType.DOWN);
+            case CHANNEL_SPEED:
+                if (command instanceof DecimalType) {
+                    speed = (DecimalType) command;
+                    updateState(CHANNEL_SPEED, speed);
+                }
+                if (command instanceof RefreshType) {
+                    /*
+                     * Since there is no way to request device state
+                     * we have to rely on persistence service to restore
+                     * the item state
+                     * => Do nothing
+                     * updateState(CHANNEL_SPEED, speed);
+                     */
+                }
+                break;
+            case CHANNEL_BLOCKING:
+                if (command instanceof OnOffType) {
+                    if (command.equals(OnOffType.OFF)) {
+                        blocking = OnOffType.OFF;
+                        updateState(CHANNEL_BLOCKING, blocking);
                     }
                 }
-                if (command instanceof StopMoveType) {
-                    if (command.equals(StopMoveType.STOP)) {
-                        updateState(CHANNEL_CONTROL, PercentType.valueOf("50"));
-                        sendTelegram(bridgehandler, CommandType.STOP);
+                if (command instanceof OnOffType) {
+                    if (command.equals(OnOffType.ON)) {
+                        blocking = OnOffType.ON;
+                        updateState(CHANNEL_BLOCKING, blocking);
                     }
                 }
                 if (command instanceof RefreshType) {
@@ -125,7 +144,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                      * we have to rely on persistence service to restore
                      * the item state
                      * => Do nothing
-                     * updateState(CHANNEL_CONTROL, CommandType.STOP);
+                     * updateState(CHANNEL_BLOCKING, blocking);
                      */
                 }
                 break;
@@ -139,10 +158,15 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
     /**
      * Prepares the data used for the telegram and sends it out
      */
-    protected void sendTelegram(EltakoGenericBridgeHandler bridgehandler, CommandType state) {
+    protected void sendTelegram(EltakoGenericBridgeHandler bridgehandler, PercentType brightness) {
         // Prepare channel values
-        int value_time = time.intValue();
-        int value_command;
+        int value_brightness = brightness.intValue();
+        int value_speed = speed.intValue();
+        int value_power = 9;
+
+        if (blocking.equals(OnOffType.ON)) {
+            value_power += 4;
+        }
 
         // Convert Device ID from int into 4 bytes
         int deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString());
@@ -152,20 +176,13 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
         ID[2] = (deviceId >> 16) & 0xFF;
         ID[3] = 0x03;
 
-        if (state == CommandType.UP) {
-            value_command = 0x01;
-        } else if (state == CommandType.DOWN) {
-            value_command = 0x02;
-        } else {
-            value_command = 0x00;
-        }
-
         // Calculate CRC value
-        int crc = (0x0B + 0x07 + 0x00 + value_time + value_command + 0x08 + ID[3] + ID[2] + ID[1] + ID[0]) % 256;
+        int crc = (0x0B + 0x07 + 0x02 + value_brightness + value_speed + value_power + ID[3] + ID[2] + ID[1] + ID[0])
+                % 256;
 
         // Prepare telegram
-        int[] data = new int[] { 0xA5, 0x5A, 0x0B, 0x07, 0x00, value_time, value_command, 0x08, ID[3], ID[2], ID[1],
-                ID[0], 0x00, crc };
+        int[] data = new int[] { 0xA5, 0x5A, 0x0B, 0x07, 0x02, value_brightness, value_speed, value_power, ID[3], ID[2],
+                ID[1], ID[0], 0x00, crc };
 
         // Get own state
         if (this.getThing().getStatus() == ThingStatus.ONLINE) {
@@ -178,7 +195,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                 strbuf.append(String.format("%02X ", data[i]));
             }
             // Log event to console
-            logger.trace("FSB14: Telegram Send: {}", strbuf);
+            logger.trace("FUD14: Telegram Send: {}", strbuf);
             // ####################################################
 
             // Write data by calling bridge handler method
@@ -194,8 +211,8 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
         // Convert Device ID from int into 4 bytes
         int deviceId = Integer.parseInt(getThing().getConfiguration().get(GENERIC_DEVICE_ID).toString());
 
-        // Check for HEADER == 0x04 and ORG == 0x07
-        if ((packet[2] >> 5 == 0x04) && (packet[3] == 0x07)) {
+        // Check for HEADER == 0x04 and ORG == 0x07 and COMMAND == 0x02
+        if ((packet[2] >> 5 == 0x04) && (packet[3] == 0x07) && (packet[4] == 0x02)) {
             // Check for ID (ignore 4th byte)
             if ((packet[11] | (packet[10] << 8) | (packet[9] << 16)) == (deviceId)) {
 
@@ -207,13 +224,11 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                     strbuf.append(String.format("%02X ", packet[i]));
                 }
                 // Log event to console
-                logger.trace("FSB14: Telegram Received: {}", strbuf);
+                logger.trace("FUD14: Telegram Received: {}", strbuf);
                 // ####################################################
 
                 // Update channel state based on received data
-                // updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
-                // updateState(CHANNEL_POWER, OnOffType.valueOf(String.valueOf(packet[7] & 0x09)));
-                // TODO: Calculate position based on runtime of rollershutter motor
+                updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
             }
         }
     }

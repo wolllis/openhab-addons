@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.misc;
 
 import java.util.Arrays;
 import java.util.HashSet;

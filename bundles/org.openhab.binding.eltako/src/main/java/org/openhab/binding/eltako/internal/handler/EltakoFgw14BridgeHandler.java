@@ -11,9 +11,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.handler;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.THING_TYPE_FGW14;
+import static org.openhab.binding.eltako.internal.misc.EltakoBindingConstants.THING_TYPE_FGW14;
 
 import java.util.Arrays;
 import java.util.HashSet;

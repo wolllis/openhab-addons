@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.misc;
 
 /**
  * The {@link CommandType} is the type of the {@link Command}.

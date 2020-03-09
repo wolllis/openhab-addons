@@ -10,9 +10,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.handler;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+import static org.openhab.binding.eltako.internal.misc.EltakoBindingConstants.*;
 
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -31,6 +31,8 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.eclipse.smarthome.io.transport.serial.SerialPortManager;
+import org.openhab.binding.eltako.internal.discovery.EltakoDeviceDiscoveryService;
+import org.openhab.binding.eltako.internal.misc.EltakoBindingConstants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

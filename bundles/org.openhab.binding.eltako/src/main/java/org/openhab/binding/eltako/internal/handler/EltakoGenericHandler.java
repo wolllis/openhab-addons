@@ -10,9 +10,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.handler;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.GENERIC_DEVICE_ID;
+import static org.openhab.binding.eltako.internal.misc.EltakoBindingConstants.GENERIC_DEVICE_ID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -22,6 +22,7 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
+import org.openhab.binding.eltako.internal.misc.EltakoTelegramListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

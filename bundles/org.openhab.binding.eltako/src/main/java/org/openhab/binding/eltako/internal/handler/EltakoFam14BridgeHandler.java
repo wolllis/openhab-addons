@@ -11,9 +11,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.eltako.internal;
+package org.openhab.binding.eltako.internal.handler;
 
-import static org.openhab.binding.eltako.internal.EltakoBindingConstants.*;
+import static org.openhab.binding.eltako.internal.misc.EltakoBindingConstants.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -39,6 +39,9 @@ import org.eclipse.smarthome.io.transport.serial.SerialPort;
 import org.eclipse.smarthome.io.transport.serial.SerialPortIdentifier;
 import org.eclipse.smarthome.io.transport.serial.SerialPortManager;
 import org.eclipse.smarthome.io.transport.serial.UnsupportedCommOperationException;
+import org.openhab.binding.eltako.internal.discovery.EltakoDeviceDiscoveryService;
+import org.openhab.binding.eltako.internal.misc.EltakoBindingConstants;
+import org.openhab.binding.eltako.internal.misc.EltakoTelegramListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

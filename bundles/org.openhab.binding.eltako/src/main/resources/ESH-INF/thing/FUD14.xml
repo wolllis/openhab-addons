@@ -12,10 +12,9 @@
 		<description>Universal-Dimmschalter, Power MOSFET bis 400 W</description>
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
-            <channel id="brightness" typeId="system.brightness" />
-            <channel id="speed" typeId="DimmingSpeed" />
-            <channel id="power" typeId="system.power" />
-            <channel id="blocking" typeId="switchState" />
+            <channel id="brightness" typeId="Brightness" />
+            <channel id="speed" typeId="Speed" />
+            <channel id="blocking" typeId="Blocking" />
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
@@ -26,16 +25,19 @@
         <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description-ref uri="thing-type:eltako:genericthing" />
 	</thing-type>
-    <channel-type id="DimmingSpeed" advanced="false">
-        <item-type>Number</item-type>
-        <label>Dimming Speed</label>
-        <category>Light</category>
+    <channel-type id="Brightness" advanced="false">
+        <item-type>Dimmer</item-type>
+        <label>Brightness</label>
         <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
     </channel-type>
-    <channel-type id="switchState">
+    <channel-type id="Speed" advanced="false">
+        <item-type>Number</item-type>
+        <label>Speed</label>
+        <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
+    </channel-type>
+    <channel-type id="Blocking" advanced="true">
         <item-type>Switch</item-type>
-        <label>Switch State</label>
-        <description>On/off status of the switch</description>
-        <category>Switch</category>
+        <label>Blocking</label>
+        <description>Prevent dimming value from being changed by switch telegram</description>
     </channel-type>
 </thing:thing-descriptions>

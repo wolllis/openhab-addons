@@ -60,11 +60,10 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
      */
     private final Logger logger = LoggerFactory.getLogger(EltakoGenericHandler.class);
 
-    private DecimalType time;
+    private DecimalType time = DecimalType.ZERO;
 
     public EltakoFsb14Handler(Thing thing) {
         super(thing);
-        time = DecimalType.ZERO;
     }
 
     /**
@@ -88,13 +87,19 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
 
         // Handle received command
         switch (channelUID.getId()) {
-            case CHANNEL_TIME:
+            case CHANNEL_RUNTIME:
                 if (command instanceof DecimalType) {
                     time = (DecimalType) command;
-                    updateState(CHANNEL_TIME, time);
+                    updateState(CHANNEL_RUNTIME, time);
                 }
                 if (command instanceof RefreshType) {
-                    updateState(CHANNEL_TIME, time);
+                    /*
+                     * Since there is no way to request device state
+                     * we have to rely on persistence service to restore
+                     * the item state
+                     * => Do nothing
+                     * updateState(CHANNEL_TIME, time);
+                     */
                 }
                 break;
             case CHANNEL_CONTROL:
@@ -115,8 +120,13 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                     }
                 }
                 if (command instanceof RefreshType) {
-                    // TODO: Trigger device to report state
-                    // updateState(CHANNEL_CONTROL, CommandType.STOP);
+                    /*
+                     * Since there is no way to request device state
+                     * we have to rely on persistence service to restore
+                     * the item state
+                     * => Do nothing
+                     * updateState(CHANNEL_CONTROL, CommandType.STOP);
+                     */
                 }
                 break;
             default:
@@ -203,6 +213,7 @@ public class EltakoFsb14Handler extends EltakoGenericHandler {
                 // Update channel state based on received data
                 // updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
                 // updateState(CHANNEL_POWER, OnOffType.valueOf(String.valueOf(packet[7] & 0x09)));
+                // TODO: Calculate position based on runtime of rollershutter motor
             }
         }
     }

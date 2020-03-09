@@ -88,7 +88,7 @@ public class EltakoBindingConstants {
     public static final String CHANNEL_BLOCKING = "blocking";
 
     // List of all FSB14 channel IDs
-    public static final String CHANNEL_TIME = "Time";
+    public static final String CHANNEL_RUNTIME = "Runtime";
     public static final String CHANNEL_CONTROL = "Control";
 
     // List of all configuration parameters

@@ -64,19 +64,13 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
     private final Logger logger = LoggerFactory.getLogger(EltakoGenericHandler.class);
 
     /**
-     * Channel variables
+     * Default internal values for additional telegram options
      */
-    private PercentType brightness;
-    private DecimalType speed;
-    private OnOffType power;
-    private OnOffType blocking;
+    private DecimalType speed = DecimalType.ZERO;
+    private OnOffType blocking = OnOffType.OFF;
 
     public EltakoFud14Handler(Thing thing) {
         super(thing);
-        brightness = PercentType.ZERO;
-        speed = DecimalType.ZERO;
-        power = OnOffType.OFF;
-        blocking = OnOffType.OFF;
     }
 
     /**
@@ -102,12 +96,18 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
         switch (channelUID.getId()) {
             case CHANNEL_BRIGHTNESS:
                 if (command instanceof PercentType) {
-                    brightness = (PercentType) command;
+                    PercentType brightness = (PercentType) command;
                     updateState(CHANNEL_BRIGHTNESS, brightness);
-                    sendTelegram(bridgehandler);
+                    sendTelegram(bridgehandler, brightness);
                 }
                 if (command instanceof RefreshType) {
-                    updateState(CHANNEL_BRIGHTNESS, brightness);
+                    /*
+                     * Since there is no way to request device state
+                     * we have to rely on persistence service to restore
+                     * the item state
+                     * => Do nothing
+                     * updateState(CHANNEL_BRIGHTNESS, brightness);
+                     */
                 }
                 break;
             case CHANNEL_SPEED:
@@ -116,26 +116,13 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
                     updateState(CHANNEL_SPEED, speed);
                 }
                 if (command instanceof RefreshType) {
-                    updateState(CHANNEL_SPEED, speed);
-                }
-                break;
-            case CHANNEL_POWER:
-                if (command instanceof OnOffType) {
-                    if (command.equals(OnOffType.OFF)) {
-                        power = OnOffType.OFF;
-                        updateState(CHANNEL_POWER, power);
-                        sendTelegram(bridgehandler);
-                    }
-                }
-                if (command instanceof OnOffType) {
-                    if (command.equals(OnOffType.ON)) {
-                        power = OnOffType.ON;
-                        updateState(CHANNEL_POWER, power);
-                        sendTelegram(bridgehandler);
-                    }
-                }
-                if (command instanceof RefreshType) {
-                    updateState(CHANNEL_POWER, power);
+                    /*
+                     * Since there is no way to request device state
+                     * we have to rely on persistence service to restore
+                     * the item state
+                     * => Do nothing
+                     * updateState(CHANNEL_SPEED, speed);
+                     */
                 }
                 break;
             case CHANNEL_BLOCKING:
@@ -152,7 +139,13 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
                     }
                 }
                 if (command instanceof RefreshType) {
-                    updateState(CHANNEL_BLOCKING, blocking);
+                    /*
+                     * Since there is no way to request device state
+                     * we have to rely on persistence service to restore
+                     * the item state
+                     * => Do nothing
+                     * updateState(CHANNEL_BLOCKING, blocking);
+                     */
                 }
                 break;
             default:
@@ -165,17 +158,12 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
     /**
      * Prepares the data used for the telegram and sends it out
      */
-    protected void sendTelegram(EltakoGenericBridgeHandler bridgehandler) {
+    protected void sendTelegram(EltakoGenericBridgeHandler bridgehandler, PercentType brightness) {
         // Prepare channel values
         int value_brightness = brightness.intValue();
         int value_speed = speed.intValue();
-        int value_power;
+        int value_power = 9;
 
-        if (power.equals(OnOffType.ON)) {
-            value_power = 9;
-        } else {
-            value_power = 8;
-        }
         if (blocking.equals(OnOffType.ON)) {
             value_power += 4;
         }
@@ -241,7 +229,6 @@ public class EltakoFud14Handler extends EltakoGenericHandler {
 
                 // Update channel state based on received data
                 updateState(CHANNEL_BRIGHTNESS, PercentType.valueOf(String.valueOf(packet[5])));
-                // updateState(CHANNEL_POWER, OnOffType.valueOf(String.valueOf(packet[7] & 0x09)));
             }
         }
     }

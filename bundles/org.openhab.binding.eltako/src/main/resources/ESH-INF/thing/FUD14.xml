@@ -12,30 +12,30 @@
 		<description>Universal-Dimmschalter, Power MOSFET bis 400 W</description>
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
-            <channel id="brightness" typeId="Brightness" />
-            <channel id="speed" typeId="Speed" />
-            <channel id="blocking" typeId="Blocking" />
+            <channel id="brightness" typeId="brightness" />
+            <channel id="speed" typeId="speed" />
+            <channel id="blocking" typeId="blocking" />
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->
             <property name="vendor">Eltako</property>
             <property name="modelId">004</property>
-            <property name="hardwareVersion">---</property>
+            <property name="HardwareVersion">---</property>
 		</properties>
         <!-- Config-Descriptions are shown to the user and (must/can) be set upon thing creation -->
         <config-description-ref uri="thing-type:eltako:genericthing" />
 	</thing-type>
-    <channel-type id="Brightness" advanced="false">
+    <channel-type id="brightness" advanced="false">
         <item-type>Dimmer</item-type>
         <label>Brightness</label>
         <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
     </channel-type>
-    <channel-type id="Speed" advanced="false">
+    <channel-type id="speed" advanced="false">
         <item-type>Number</item-type>
         <label>Speed</label>
         <state min="0" max="255" step="1" pattern="%d" readOnly="false" />
     </channel-type>
-    <channel-type id="Blocking" advanced="true">
+    <channel-type id="blocking" advanced="true">
         <item-type>Switch</item-type>
         <label>Blocking</label>
         <description>Prevent dimming value from being changed by switch telegram</description>

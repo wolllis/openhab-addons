@@ -12,8 +12,8 @@
 		<description>Schaltaktor Beschattungselemente und Rollladen mit 2 Kanälen für zwei 230V-Motoren</description>
 		<channels>
 			<!-- Channels represent the state of the Thing which can be linked to an Item -->
-            <channel id="Control" typeId="control" />
-            <channel id="Runtime" typeId="runtime" />
+            <channel id="control" typeId="control" />
+            <channel id="runtime" typeId="runtime" />
 		</channels>
 		<properties>
 			<!-- Properties are shown to the user but can NOT be modified by him -->

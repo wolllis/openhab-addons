@@ -88,12 +88,12 @@ public class EltakoBindingConstants {
     public static final String CHANNEL_BLOCKING = "blocking";
 
     // List of all FSB14 channel IDs
-    public static final String CHANNEL_RUNTIME = "Runtime";
-    public static final String CHANNEL_CONTROL = "Control";
+    public static final String CHANNEL_RUNTIME = "runtime";
+    public static final String CHANNEL_CONTROL = "control";
 
     // List of all configuration parameters
-    public static final String GENERIC_HARDWARE_VERSION = "hardwareVersion";
-    public static final String GENERIC_DEVICE_ID = "deviceId";
+    public static final String GENERIC_HARDWARE_VERSION = "HardwareVersion";
+    public static final String GENERIC_DEVICE_ID = "DeviceId";
 
     // Bridge config properties
     public static final String SERIALCOMPORT = "SerialComPort";

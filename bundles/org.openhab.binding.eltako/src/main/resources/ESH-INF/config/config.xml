@@ -5,7 +5,7 @@
     xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
     
     <config-description uri="bridge-type:eltako:genericbridge">
-        <parameter name="deviceId" type="text" pattern="(25[0-4]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[1-9])" required="true">
+        <parameter name="DeviceId" type="text" pattern="(25[0-4]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[1-9])" required="true">
             <label>Device ID number</label>
             <description>Needs to match the device ID set by PCT14</description>
         </parameter>
@@ -41,7 +41,7 @@
     </config-description>
 
     <config-description uri="thing-type:eltako:genericthing">
-        <parameter name="deviceId" type="text" pattern="(25[0-4]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[1-9])" required="true">
+        <parameter name="DeviceId" type="text" pattern="(25[0-4]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[1-9])" required="true">
             <label>Device ID number</label>
             <description>Needs to match the device ID set by PCT14</description>
         </parameter>

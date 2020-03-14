@@ -15,7 +15,6 @@ package org.openhab.binding.telegram.bot;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -255,18 +254,18 @@ public class TelegramActions implements ThingActions {
 
     @RuleAction(label = "Telegram message", description = "Sends a Telegram via Telegram API")
     public boolean sendTelegram(@ActionInput(name = "chatId") @Nullable Long chatId,
-            @ActionInput(name = "message") @Nullable String format,
+            @ActionInput(name = "message") @Nullable String message,
             @ActionInput(name = "args") @Nullable Object... args) {
-        return sendTelegram(chatId, String.format(format, args));
+        return sendTelegram(chatId, String.format(message, args));
     }
 
     @RuleAction(label = "Telegram message", description = "Sends a Telegram via Telegram API")
-    public boolean sendTelegram(@ActionInput(name = "message") @Nullable String format,
+    public boolean sendTelegram(@ActionInput(name = "message") @Nullable String message,
             @ActionInput(name = "args") @Nullable Object... args) {
         TelegramHandler localHandler = handler;
         if (localHandler != null) {
             for (Long chatId : localHandler.getChatIds()) {
-                if (!sendTelegram(chatId, format, args)) {
+                if (!sendTelegram(chatId, message, args)) {
                     return false;
                 }
             }
